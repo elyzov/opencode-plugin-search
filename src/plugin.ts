@@ -1,6 +1,6 @@
-import type { Plugin } from "@opencode-ai/plugin";
+import type { Plugin } from '@opencode-ai/plugin';
 
-import { createFindTool, createFindByRuleTool, createDumpSyntaxTool, createTestRuleTool } from "./tools";
+import { createDumpSyntaxTool, createFindByRuleTool, createFindTool, createTestRuleTool } from './tools';
 
 export const AstGrepPlugin: Plugin = async ({ directory }) => {
   return {

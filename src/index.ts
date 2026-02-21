@@ -1,3 +1,3 @@
-import { AstGrepPlugin } from "./plugin";
+import { AstGrepPlugin } from './plugin';
 
 export default AstGrepPlugin;
