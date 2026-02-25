@@ -47,22 +47,29 @@ Search code in the project using AST patterns for structural matching.
 
 ### `ast_grep_find_by_rule`
 
-Search code using complex YAML rules for advanced structural queries.
+Search code using structured AST rules for advanced structural queries.
 
 **Arguments**:
-- `yaml` (string): The ast-grep YAML rule definition
+- `rule` (object): The ast-grep rule definition as a structured object with required `id`, `language`, and `rule` fields
 - `max_results` (number, optional): Maximum matches to return
 - `output_format` (string, optional): `"text"` or `"json"`
 
 **Example**:
-```yaml
-id: find-async-functions
-language: javascript
-rule:
-  kind: function_declaration
-  has:
-    pattern: await $EXPR
-    stopBy: end
+```json
+{
+  "rule": {
+    "id": "find-async-functions",
+    "language": "javascript",
+    "rule": {
+      "kind": "function_declaration",
+      "has": {
+        "pattern": "await $EXPR",
+        "stopBy": "end"
+      }
+    }
+  },
+  "max_results": 10
+}
 ```
 
 ### `ast_grep_dump_syntax`
@@ -85,19 +92,51 @@ Analyze code structure by dumping syntax trees for debugging and understanding.
 
 ### `ast_grep_test_rule`
 
-Test and validate YAML rules against code snippets to ensure correct matching.
+Test and validate structured AST rules against code snippets to ensure correct matching.
 
 **Arguments**:
 - `code` (string): The code to test
-- `yaml` (string): The ast-grep YAML rule
+- `rule` (object): The ast-grep rule definition as a structured object with required `id`, `language`, and `rule` fields
 
 **Example**:
 ```json
 {
   "code": "async function test() { await fetch(); }",
-  "yaml": "id: test\nlanguage: javascript\nrule:\n  kind: function_declaration\n  has:\n    pattern: await $EXPR\n    stopBy: end"
+  "rule": {
+    "id": "test",
+    "language": "javascript",
+    "rule": {
+      "kind": "function_declaration",
+      "has": {
+        "pattern": "await $EXPR",
+        "stopBy": "end"
+      }
+    }
+  }
 }
 ```
+
+## Rule Structure
+
+The rule object follows the ast-grep rule configuration interface:
+
+```typescript
+interface RuleObject {
+  pattern?: string | Pattern
+  kind?: string
+  regex?: string
+  inside?: RuleObject & Relation
+  has?: RuleObject & Relation
+  follows?: RuleObject & Relation
+  precedes?: RuleObject & Relation
+  all?: RuleObject[]
+  any?: RuleObject[]
+  not?: RuleObject
+  matches?: string
+}
+```
+
+See [ast-grep rule documentation](https://ast-grep.github.io/guide/rule-config.html) for detailed examples.
 
 ## Configuration
 

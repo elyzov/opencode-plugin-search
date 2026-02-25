@@ -62,7 +62,7 @@ describe('integration (requires ast-grep)', () => {
     expect(result.length).toBeGreaterThan(0);
   });
 
-  test('tests YAML rule using plugin tool', async () => {
+  test('tests structured rule using plugin tool', async () => {
     const pluginInput = { directory: fixturesDir } as PluginInput;
     const plugin = await SearchPlugin(pluginInput);
     const testRuleTool = plugin.tool?.ast_grep_test_rule;
@@ -70,16 +70,19 @@ describe('integration (requires ast-grep)', () => {
     expect(testRuleTool).toBeDefined();
     expect(typeof testRuleTool?.execute).toBe('function');
 
-    const yaml = `id: find-console
-language: javascript
-rule:
-  pattern: console.log($ARG)`;
+    const rule = {
+      id: 'find-console',
+      language: 'javascript',
+      rule: {
+        pattern: 'console.log($ARG)',
+      },
+    };
 
     // biome-ignore lint/style/noNonNullAssertion: tested above
     const result = await testRuleTool!.execute(
       {
         code: "console.log('test');\nfunction foo() {}",
-        yaml,
+        rule,
       },
       mockContext,
     );
