@@ -1,4 +1,4 @@
-import { tool } from '@opencode-ai/plugin';
+import { type ToolContext, tool } from '@opencode-ai/plugin';
 import { executeAstGrep, formatMatchesAsText } from './utils';
 
 export function createFindTool(directory: string) {
@@ -10,7 +10,7 @@ export function createFindTool(directory: string) {
       max_results: tool.schema.number().int().positive().optional(),
       output_format: tool.schema.enum(['text', 'json']).optional(),
     },
-    async execute(args) {
+    async execute(args, _context: ToolContext) {
       const { pattern, language, max_results, output_format = 'text' } = args;
       const cmdArgs = ['--pattern', pattern];
       if (language) {
@@ -57,7 +57,7 @@ export function createFindByRuleTool(directory: string) {
       max_results: tool.schema.number().int().positive().optional(),
       output_format: tool.schema.enum(['text', 'json']).optional(),
     },
-    async execute(args) {
+    async execute(args, _context: ToolContext) {
       const { yaml, max_results, output_format = 'text' } = args;
       const cmdArgs = ['--inline-rules', yaml, '--json', '.'];
 
@@ -97,7 +97,7 @@ export function createDumpSyntaxTool() {
       language: tool.schema.string(),
       format: tool.schema.enum(['cst', 'ast', 'pattern']).optional(),
     },
-    async execute(args) {
+    async execute(args, _context: ToolContext) {
       const { code, language, format = 'cst' } = args;
       const cmdArgs = ['--pattern', code, '--lang', language, `--debug-query=${format}`];
       // debug-query outputs to stderr
@@ -114,7 +114,7 @@ export function createTestRuleTool(directory: string) {
       code: tool.schema.string(),
       yaml: tool.schema.string(),
     },
-    async execute(args) {
+    async execute(args, _context: ToolContext) {
       const { code, yaml } = args;
       const cmdArgs = ['--inline-rules', yaml, '--json', '--stdin'];
       const { matches } = await executeAstGrep('scan', cmdArgs, {

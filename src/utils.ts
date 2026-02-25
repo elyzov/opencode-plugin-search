@@ -1,4 +1,6 @@
 import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 export interface AstGrepMatch {
   file: string;
@@ -108,15 +110,20 @@ export function getSupportedLanguages(): string[] {
     'yaml',
   ];
 
-  // TODO: Load custom languages from sgconfig.yaml if present
+  // TODO: Load custom languages from sgconfig.yml or sgconfig.yaml if present
   return languages.sort();
 }
 
 function getConfigPath(directory?: string): string | undefined {
   if (!directory) return undefined;
-  const configPath = `${directory}/sgconfig.yaml`;
-  // TODO: check file exists
-  return configPath;
+  const extensions = ['.yml', '.yaml'];
+  for (const ext of extensions) {
+    const configPath = join(directory, `sgconfig${ext}`);
+    if (existsSync(configPath)) {
+      return configPath;
+    }
+  }
+  return undefined;
 }
 
 export async function executeAstGrep(

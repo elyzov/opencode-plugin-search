@@ -1,6 +1,6 @@
 {
   "name": "opencode-plugin-search",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "An OpenCode plugin providing advanced code search capabilities including AST-based structural search using ast-grep.",
   "type": "module",
   "main": "dist/index.js",
@@ -11,8 +11,7 @@
     "build": "bun build ./src/index.ts --outfile ./dist/index.js --target node",
     "watch": "bun build ./src/index.ts --outfile ./dist/index.js --target node --watch",
     "typecheck": "biome check && tsc --noEmit",
-    "auto": "biome check --fix && tsc --noEmit",
-    "prepublishOnly": "bun run build"
+    "auto": "biome check --fix && tsc --noEmit"
   },
   "repository": {
     "type": "git",
