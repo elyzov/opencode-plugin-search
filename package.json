@@ -1,7 +1,7 @@
 {
-  "name": "opencode-plugin-ast-grep",
+  "name": "opencode-plugin-search",
   "version": "0.0.1",
-  "description": "An OpenCode plugin for ast-grep(sg) CLI tool for code structural search, lint, and rewriting.",
+  "description": "An OpenCode plugin providing advanced code search capabilities including AST-based structural search using ast-grep.",
   "type": "module",
   "main": "dist/index.js",
   "files": [
@@ -16,22 +16,24 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/elyzov/opencode-plugin-ast-grep.git"
+    "url": "git+https://github.com/elyzov/opencode-plugin-search.git"
   },
   "keywords": [
     "opencode",
     "plugin",
+    "search",
+    "code-search",
     "ast-grep",
     "agent",
     "code",
-    "search"
+    "structural-search"
   ],
   "author": "elyzov",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/elyzov/opencode-plugin-ast-grep/issues"
+    "url": "https://github.com/elyzov/opencode-plugin-search/issues"
   },
-  "homepage": "https://github.com/elyzov/opencode-plugin-ast-grep#readme",
+  "homepage": "https://github.com/elyzov/opencode-plugin-search#readme",
   "peerDependencies": {
     "@opencode-ai/plugin": "^1.1.19",
     "@opencode-ai/sdk": "^1.1.19"

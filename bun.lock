@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "opencode-plugin-ast-grep",
+      "name": "opencode-plugin-search",
       "dependencies": {
         "shescape": "^2.1.8",
       },

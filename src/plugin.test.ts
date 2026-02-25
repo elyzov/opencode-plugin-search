@@ -1,15 +1,15 @@
 import { describe, expect, test } from 'bun:test';
 import type { PluginInput } from '@opencode-ai/plugin';
-import { AstGrepPlugin } from './plugin';
+import { SearchPlugin } from './plugin';
 
-describe('AstGrepPlugin', () => {
+describe('SearchPlugin', () => {
   test('returns plugin with tool definitions', async () => {
     // Create a minimal plugin input for testing
     const pluginInput = {
       directory: '/test/dir',
     } as unknown as PluginInput;
 
-    const plugin = await AstGrepPlugin(pluginInput);
+    const plugin = await SearchPlugin(pluginInput);
 
     expect(plugin).toBeDefined();
     expect(plugin.tool).toBeDefined();

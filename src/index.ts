@@ -1,3 +1,3 @@
-import { AstGrepPlugin } from './plugin';
+import { SearchPlugin } from './plugin';
 
-export default AstGrepPlugin;
+export default SearchPlugin;
