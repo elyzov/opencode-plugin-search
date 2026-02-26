@@ -142,6 +142,16 @@ See [ast-grep rule documentation](https://ast-grep.github.io/guide/rule-config.h
 
 The plugin automatically looks for `sgconfig.yaml` in the project root to support custom languages and rule directories for ast-grep search functionality. See [ast-grep documentation](https://ast-grep.github.io/advanced/custom-language.html) for configuration details.
 
+## Future Plans
+
+See [ROADMAP.md](ROADMAP.md) for detailed plans about upcoming features including:
+
+- **Pre-configured rule library** - Ready-to-use templates for common patterns
+- **Batch query optimization** - Multiple patterns in single calls
+- **Context-aware search** - Richer results with surrounding code context
+- **Semantic search enhancement** - Component usage tracking and dependency analysis
+- **Performance optimizations** - Parallel execution and smart caching
+
 ## Development
 
 ```bash
