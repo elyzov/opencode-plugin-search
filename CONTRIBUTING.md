@@ -93,6 +93,38 @@ Example rule preset structure:
 }
 ```
 
+## Project Structure
+
+The plugin follows a modular architecture where each major feature set is organized into its own directory under `src/`. This separation allows for clear responsibility boundaries and easier maintenance.
+
+### Directory Layout
+
+```
+src/
+├── plugin.ts              # Plugin entry point, imports and combines tools from modules
+├── index.ts               # Default export (re-exports plugin.ts)
+├── utils.ts               # Shared utilities (AST-grep execution, formatting)
+├── astgrep/               # AST-grep related functionality
+│   ├── index.ts           # Exports AST-grep tools and types
+│   ├── tools.ts           # Individual tool implementations (find, findByRule, dumpSyntax, testRule)
+│   └── ...                # Other AST-grep specific modules
+├── websearch/             # Web search functionality
+│   ├── index.ts           # Exports web search tools and types
+│   ├── tools.ts           # Web search tool implementation
+│   └── ...                # Other web search specific modules
+└── *.test.ts              # Test files (colocated with source files)
+```
+
+### Module Organization
+
+Each module (`astgrep`, `websearch`) should:
+- Export its public API through `index.ts`
+- Keep internal implementation details private
+- Provide a clean interface for the plugin to consume
+- Be independently testable
+
+The plugin entry point (`src/plugin.ts`) imports tool factories from each module and combines them into a single plugin instance.
+
 ## Reporting Bugs
 
 When reporting bugs, please include:

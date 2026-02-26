@@ -22,11 +22,13 @@ describe('SearchPlugin', () => {
     expect(tools?.ast_grep_find_by_rule).toBeDefined();
     expect(tools?.ast_grep_dump_syntax).toBeDefined();
     expect(tools?.ast_grep_test_rule).toBeDefined();
+    expect(tools?.web_search).toBeDefined();
 
     // Check that tools have execute method
     expect(typeof tools?.ast_grep_find?.execute).toBe('function');
     expect(typeof tools?.ast_grep_find_by_rule?.execute).toBe('function');
     expect(typeof tools?.ast_grep_dump_syntax?.execute).toBe('function');
     expect(typeof tools?.ast_grep_test_rule?.execute).toBe('function');
+    expect(typeof tools?.web_search?.execute).toBe('function');
   });
 });

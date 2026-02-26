@@ -1,6 +1,11 @@
 {
   "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.16.0/.schema/devbox.schema.json",
-  "packages": ["bun@latest", "biome@latest", "ast-grep@latest"],
+  "packages": [
+    "bun@latest",
+    "biome@latest",
+    "ast-grep@latest",
+    "runx:lightpanda-io/browser@latest"
+  ],
   "env_from": ".env",
   "shell": {
     "init_hook": ["echo 'Welcome to devbox!' > /dev/null"],
