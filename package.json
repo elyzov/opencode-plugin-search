@@ -11,7 +11,8 @@
     "build": "bun build ./src/index.ts --outfile ./dist/index.js --target node",
     "watch": "bun build ./src/index.ts --outfile ./dist/index.js --target node --watch",
     "typecheck": "biome check && tsc --noEmit",
-    "auto": "biome check --fix && tsc --noEmit"
+    "auto": "biome check --fix && tsc --noEmit",
+    "test:pack": "bun pm pack --dry-run"
   },
   "repository": {
     "type": "git",
