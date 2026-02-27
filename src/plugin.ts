@@ -13,7 +13,7 @@ export const SearchPlugin: Plugin = async ({ directory }) => {
       ast_grep_find_by_rule: createFindByRuleTool(directory),
       ast_grep_dump_syntax: createDumpSyntaxTool(),
       ast_grep_test_rule: createTestRuleTool(directory),
-      web_search: createWebSearchTool(config),
+      web_search: createWebSearchTool(directory, config),
     },
   };
 };

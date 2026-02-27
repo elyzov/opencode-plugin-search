@@ -4,7 +4,7 @@
     "bun@latest",
     "biome@latest",
     "ast-grep@latest",
-    "runx:lightpanda-io/browser@latest"
+    "ungoogled-chromium@latest"
   ],
   "env_from": ".env",
   "shell": {

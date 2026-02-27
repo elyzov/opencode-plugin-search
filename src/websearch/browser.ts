@@ -295,13 +295,6 @@ export class Browser {
   }
 
   /**
-   * Get whether this browser needs cleanup
-   */
-  needsCleanup(): boolean {
-    return this._needsCleanup;
-  }
-
-  /**
    * Create a new page from the browser
    */
   async newPage() {
@@ -336,6 +329,10 @@ export class Browser {
    * Universal cleanup method that handles different cleanup scenarios
    */
   async cleanup(): Promise<void> {
+    if (!this._needsCleanup) {
+      return;
+    }
+
     if (this.isClosed) {
       return;
     }
@@ -474,6 +471,8 @@ export class Browser {
           '--no-first-run',
           '--no-zygote',
           '--disable-gpu',
+          '--disable-blink-features=AutomationControlled',
+          '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
           ...args,
         ],
         timeout,

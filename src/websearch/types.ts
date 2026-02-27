@@ -1,7 +1,7 @@
 export interface SearchEngineResult {
   title: string;
   link: string;
-  snippet: string;
+  content?: string;
   source: 'google' | 'duckduckgo';
   rank: number;
 }
@@ -23,7 +23,6 @@ export interface BaseSearchOptions {
 
 export interface GoogleSearchOptions extends BaseSearchOptions {
   safe_search?: boolean;
-  country?: string;
   use_saved_state?: boolean;
 }
 

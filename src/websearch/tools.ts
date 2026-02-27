@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { type ToolContext, tool } from '@opencode-ai/plugin';
 import type { PluginConfig } from '../config';
 import { getBrowser } from './browser';
@@ -27,7 +28,7 @@ const searchEngineOptionsSchema = tool.schema
     message: 'At least one search engine must be specified (duckduckgo or google)',
   });
 
-export function createWebSearchTool(config?: PluginConfig) {
+export function createWebSearchTool(directory: string, config?: PluginConfig) {
   return tool({
     description:
       'Search the web using Google and/or DuckDuckGo. If multiple engines are specified, queries run in parallel.',
@@ -44,7 +45,16 @@ export function createWebSearchTool(config?: PluginConfig) {
       const results: SearchEngineResult[] = [];
       const sources: SearchResponse['sources'] = {};
 
+      if (config?.browser?.executablePath) {
+        // If the executable path is relative, prepend the plugin directory
+        if (!path.isAbsolute(config.browser.executablePath)) {
+          config.browser.executablePath = path.join(directory, config.browser.executablePath);
+        }
+      }
+
       const searchPromises: Promise<void>[] = [];
+      const browserInstance = await getBrowser(config?.browser);
+      const browser = browserInstance.getPuppeteerBrowser();
 
       if (engines.google) {
         // Merge user config with LLM options (LLM options take precedence)
@@ -54,11 +64,12 @@ export function createWebSearchTool(config?: PluginConfig) {
           timeout,
           locale,
         };
-        const browserInstance = await getBrowser(config?.browser);
-        const browser = browserInstance.getPuppeteerBrowser();
+
+        // Create new browser page
+        const googlePage = await browser.newPage();
 
         searchPromises.push(
-          searchGoogle(query, googleOptions, browser)
+          searchGoogle(query, googleOptions, googlePage)
             .then((googleResults) => {
               sources.google = { count: googleResults.length, success: true };
               googleResults.forEach((result, index) => {
@@ -77,10 +88,7 @@ export function createWebSearchTool(config?: PluginConfig) {
               };
             })
             .finally(() => {
-              // Cleanup browser instance if needed
-              if (browserInstance?.needsCleanup()) {
-                browserInstance.cleanup();
-              }
+              googlePage.close();
             }),
         );
       }
@@ -109,7 +117,10 @@ export function createWebSearchTool(config?: PluginConfig) {
       }
 
       // Wait for all searches to complete (or fail)
-      await Promise.allSettled(searchPromises);
+      await Promise.allSettled(searchPromises).finally(() => {
+        // Cleanup browser instance if needed
+        browserInstance.cleanup();
+      });
 
       // Sort results by source and rank for consistent output
       results.sort((a, b) => {
@@ -130,8 +141,7 @@ export function createWebSearchTool(config?: PluginConfig) {
 
       const formatted = results
         .map(
-          (r, i) =>
-            `${i + 1}. [${r.source.toUpperCase()}] ${r.title}\n   ${r.link}\n   ${r.snippet || 'No description'}\n`,
+          (r, i) => `${i + 1}. [${r.source.toUpperCase()}] ${r.title}\n   ${r.link}\n   ${r.content || 'No content'}\n`,
         )
         .join('\n');
 

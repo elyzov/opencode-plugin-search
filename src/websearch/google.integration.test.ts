@@ -1,25 +1,25 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import type { Browser as PuppeteerBrowser } from "puppeteer-core";
-import type { Browser } from "./browser";
-import { getBrowser } from "./browser";
-import { searchGoogle } from "./google";
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import type { Page, Browser as PuppeteerBrowser } from 'puppeteer-core';
+import type { Browser } from './browser';
+import { getBrowser } from './browser';
+import { searchGoogle } from './google';
 
 // These are real integration tests that require network access and Playwright browsers
 // Run with: RUN_NETWORK_TESTS=true bun test src/websearch/google.integration.test.ts
-const shouldRun = process.env.RUN_NETWORK_TESTS === "true";
-const browserLaunchCommand =
-  "lightpanda-x86_64-linux serve --obey_robots --log_format pretty --log_level info --host 127.0.0.1 --port 9222";
+const shouldRun = process.env.RUN_NETWORK_TESTS === 'true';
 
-(shouldRun ? describe : describe.skip)("google integration tests", () => {
+(shouldRun ? describe : describe.skip)('google integration tests', () => {
   let browserInstance: Browser | null = null;
   let browser: PuppeteerBrowser | null = null;
+  let googlePage: Page | null = null;
 
   beforeAll(async () => {
     browserInstance = await getBrowser({
-      browserLaunchCommand,
-      headless: true,
+      executablePath: '.devbox/nix/profile/default/bin/chromium',
+      headless: false,
     });
     browser = browserInstance.getPuppeteerBrowser();
+    googlePage = await browser.newPage();
   }, 40000);
 
   afterAll(async () => {
@@ -28,17 +28,17 @@ const browserLaunchCommand =
     }
   });
 
-  test("returns search results for common query", async () => {
-    if (!browser) throw new Error("Browser not initialized");
+  test('returns search results for common query', async () => {
+    if (!googlePage) throw new Error('Page is required');
 
     const results = await searchGoogle(
-      "hello world",
+      'hello world',
       {
         limit: 5,
         timeout: 30000, // Longer timeout for browser automation
-        locale: "en-US",
+        locale: 'en-US',
       },
-      browser,
+      googlePage,
     );
 
     // Google should return some results
@@ -57,18 +57,18 @@ const browserLaunchCommand =
     }
   }, 40000); // Extended timeout for browser automation
 
-  test("respects limit parameter", async () => {
-    if (!browser) throw new Error("Browser not initialized");
+  test('respects limit parameter', async () => {
+    if (!googlePage) throw new Error('Page is required');
 
     const limit = 2;
     const results = await searchGoogle(
-      "javascript programming",
+      'javascript programming',
       {
         limit,
         timeout: 30000,
-        locale: "en-US",
+        locale: 'en-US',
       },
-      browser,
+      googlePage,
     );
 
     // Should not return more than limit
@@ -79,18 +79,17 @@ const browserLaunchCommand =
     }
   }, 40000);
 
-  test("handles country-specific Google domain", async () => {
-    if (!browser) throw new Error("Browser not initialized");
+  test('handles country-specific Google domain', async () => {
+    if (!googlePage) throw new Error('Page is required');
 
     const results = await searchGoogle(
-      "test",
+      'test',
       {
         limit: 3,
         timeout: 30000,
-        locale: "en-US",
-        country: "co.uk", // Use Google UK
+        locale: 'en-US',
       },
-      browser,
+      googlePage,
     );
 
     // Should work with country-specific domain
@@ -101,7 +100,7 @@ const browserLaunchCommand =
       });
       console.log(`Got ${results.length} results from Google UK`);
     } else {
-      console.log("No results from Google UK (might be CAPTCHA or other issue)");
+      console.log('No results from Google UK (might be CAPTCHA or other issue)');
     }
   }, 40000);
 });

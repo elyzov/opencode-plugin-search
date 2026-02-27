@@ -1,6 +1,22 @@
 import { describe, expect, mock, test } from 'bun:test';
 import type { ToolContext } from '@opencode-ai/plugin';
 
+// Mock the browser module before importing the tool
+mock.module('./browser', () => ({
+  getBrowser: mock(async () => ({
+    getPuppeteerBrowser: () => ({
+      newPage: mock(async () => ({
+        goto: mock(async () => {}),
+        waitForSelector: mock(async () => {}),
+        evaluate: mock(async () => []),
+        close: mock(async () => {}),
+      })),
+      close: mock(async () => {}),
+    }),
+    cleanup: mock(async () => {}),
+  })),
+}));
+
 // Mock the search engines before importing the tool
 mock.module('./duckduckgo', () => ({
   searchDuckDuckGo: mock(async () => []),
@@ -26,13 +42,13 @@ describe('websearch tools', () => {
   };
 
   test('creates a tool with execute method', () => {
-    const tool = createWebSearchTool();
+    const tool = createWebSearchTool('.');
     expect(tool).toBeDefined();
     expect(typeof tool.execute).toBe('function');
   });
 
   test('handles empty results from all engines', async () => {
-    const tool = createWebSearchTool();
+    const tool = createWebSearchTool('.');
     const result = await tool.execute(
       {
         query: 'test query',
@@ -47,6 +63,22 @@ describe('websearch tools', () => {
   });
 
   test('handles mixed success and failure', async () => {
+    // Mock browser module again since we're re-importing
+    mock.module('./browser', () => ({
+      getBrowser: mock(async () => ({
+        getPuppeteerBrowser: () => ({
+          newPage: mock(async () => ({
+            goto: mock(async () => {}),
+            waitForSelector: mock(async () => {}),
+            evaluate: mock(async () => []),
+            close: mock(async () => {}),
+          })),
+          close: mock(async () => {}),
+        }),
+        cleanup: mock(async () => {}),
+      })),
+    }));
+
     // Mock google to fail, duckduckgo to succeed with one result
     mock.module('./google', () => ({
       searchGoogle: mock(async () => {
@@ -60,7 +92,7 @@ describe('websearch tools', () => {
     }));
 
     const { createWebSearchTool: createTool } = await import('./tools');
-    const tool = createTool();
+    const tool = createTool('.');
     const result = await tool.execute(
       {
         query: 'test query',

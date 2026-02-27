@@ -23,7 +23,7 @@ export async function searchDuckDuckGo(
       results.push({
         title: data.Heading || data.AbstractSource || 'Instant Answer',
         link: data.AbstractURL || '',
-        snippet: data.AbstractText,
+        content: data.AbstractText,
       });
     }
 
@@ -34,7 +34,6 @@ export async function searchDuckDuckGo(
           results.push({
             title: item.Text || '',
             link: item.FirstURL,
-            snippet: '',
           });
         }
       });
@@ -54,7 +53,7 @@ export async function searchDuckDuckGo(
             results.push({
               title: item.Text.split(' - ')[0] || item.Text,
               link: item.FirstURL,
-              snippet: item.Text.split(' - ').slice(1).join(' - ') || '',
+              content: item.Text.split(' - ').slice(1).join(' - ') || '',
             });
           }
         });
@@ -66,6 +65,6 @@ export async function searchDuckDuckGo(
     return results.slice(0, options.limit);
   } catch (error) {
     console.error('DuckDuckGo search error:', error);
-    throw new Error(`DuckDuckGo search failed: ${error instanceof Error ? error.message : String(error)}`);
+    return [];
   }
 }
