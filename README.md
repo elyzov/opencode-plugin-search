@@ -73,6 +73,67 @@ sudo apt-get update && sudo apt-get install -y \
   libasound2
 ```
 
+## Browser Configuration
+
+Browser configuration for Google search can be provided through configuration files or environment variables. This allows users to set up their browser once, and the LLM doesn't need to know about system-specific paths.
+
+### Configuration Files
+
+The plugin looks for configuration in the following locations (in order of priority):
+
+1. **Project config**: `.opencode-search.json` in your project directory
+2. **User config**: `~/.opencode/plugin-search.json` in your home directory
+
+### Environment Variables
+
+- `GOOGLE_BROWSER_EXECUTABLE_PATH`: Browser executable path
+- `GOOGLE_BROWSER_WS_ENDPOINT`: Remote debugging URL (e.g., "http://localhost:9222")
+- `GOOGLE_BROWSER_LAUNCH_COMMAND`: Command to launch browser
+- `GOOGLE_BROWSER_ARGS`: Comma-separated browser arguments
+- `GOOGLE_BROWSER_HEADLESS`: "true" or "false" (default: true)
+
+### Configuration Format
+
+**User/Project config file** (`plugin-search.json` or `.opencode-search.json`):
+```json
+{
+  "google": {
+    "executable_path": "/usr/bin/chromium",
+    "browser_ws_endpoint": "http://localhost:9222",
+    "browser_args": ["--no-sandbox", "--disable-dev-shm-usage"],
+    "headless": true
+  }
+}
+```
+
+**Minimal config** (auto-detect browser):
+```json
+{
+  "google": {}
+}
+```
+
+**Using Docker/LightPanda**:
+```json
+{
+  "google": {
+    "browser_ws_endpoint": "http://localhost:9222"
+  }
+}
+```
+
+**Environment variables only** (no config file needed):
+```bash
+export GOOGLE_BROWSER_WS_ENDPOINT="http://localhost:9222"
+```
+
+### Tool Arguments vs Configuration
+
+- **Tool arguments** (provided by LLM): `query`, `engines`, `limit`, `timeout`, `locale`, `safe_search`, `country`, `headless`, `use_saved_state`
+- **User configuration** (provided by user): `executable_path`, `browser_ws_endpoint`, `browser_launch_command`, `browser_args`
+
+The LLM only needs to specify search parameters, not system-specific browser paths.
+
 ## Usage
 
 The plugin provides advanced search tools powered by ast-grep:
@@ -183,10 +244,6 @@ Search the web using Google and/or DuckDuckGo search engines. If multiple engine
     - `country` (string): Country-specific Google domain (e.g., "co.uk", "com.au")
     - `headless` (boolean): Run browser in headless mode (default: true). Note: headless mode may trigger CAPTCHA challenges.
     - `use_saved_state` (boolean): Reuse browser session (experimental)
-    - `executable_path` (string): Browser executable path (e.g., "/usr/bin/chromium"). Auto-detected if not specified.
-    - `browser_ws_endpoint` (string): Remote debugging URL (e.g., "http://localhost:9222"). Connect to existing browser instance.
-    - `browser_launch_command` (string): Command to launch browser (e.g., "lightpanda serve --port 9222").
-    - `browser_args` (string[]): Additional arguments for browser launch.
 - `limit` (number, optional): Maximum results per engine (default: 10, max: 50)
 - `timeout` (number, optional): Timeout in milliseconds per engine (default: 30000, max: 120000)
 - `locale` (string, optional): Locale for search results (e.g., "en-US", "fr-FR")
@@ -210,7 +267,7 @@ Search the web using Google and/or DuckDuckGo search engines. If multiple engine
 }
 ```
 
-**Note**: Google search requires Playwright with Chromium browser and system dependencies (see System Requirements above). DuckDuckGo uses their public API and has no additional dependencies.
+**Note**: Google search requires a Chrome/Chromium browser (see System Requirements above). Browser configuration (executable path, remote debugging) is handled via configuration files or environment variables - see Configuration section. DuckDuckGo uses their public API and has no additional dependencies.
 
 ## Rule Structure
 
