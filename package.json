@@ -1,6 +1,6 @@
 {
   "name": "opencode-plugin-search",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "An OpenCode plugin providing advanced code search capabilities including AST-based structural search using ast-grep.",
   "type": "module",
   "main": "dist/index.js",
@@ -49,6 +49,7 @@
   },
   "dependencies": {
     "js-yaml": "^4.1.0",
+    "mdream": "^0.16.0",
     "puppeteer-core": "^24.37.5",
     "shescape": "^2.1.8"
   }

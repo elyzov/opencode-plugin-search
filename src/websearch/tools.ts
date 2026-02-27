@@ -3,6 +3,7 @@ import { type ToolContext, tool } from '@opencode-ai/plugin';
 import type { PluginConfig } from '../config';
 import { getBrowser } from './browser';
 import { searchDuckDuckGo } from './duckduckgo';
+import { fetchMultipleWebpagesToMarkdown, summarizeFetchResults } from './fetcher';
 import { searchGoogle } from './google';
 import type { GoogleSearchOptions, SearchEngineResult, SearchResponse } from './types';
 
@@ -38,9 +39,19 @@ export function createWebSearchTool(directory: string, config?: PluginConfig) {
       limit: tool.schema.number().int().positive().max(50).optional(),
       timeout: tool.schema.number().int().positive().max(120000).optional(),
       locale: tool.schema.string().optional(),
+      fetch_content: tool.schema.boolean().optional(),
+      max_content_length: tool.schema.number().int().positive().max(50000).optional(),
     },
     async execute(args, _context: ToolContext): Promise<string> {
-      const { query, engines, limit = 10, timeout = 30000, locale = 'en-US' } = args;
+      const {
+        query,
+        engines,
+        limit = 10,
+        timeout = 30000,
+        locale = 'en-US',
+        fetch_content = false,
+        max_content_length = 10000,
+      } = args;
 
       const results: SearchEngineResult[] = [];
       const sources: SearchResponse['sources'] = {};
@@ -130,6 +141,26 @@ export function createWebSearchTool(directory: string, config?: PluginConfig) {
         return a.source === 'google' ? -1 : 1;
       });
 
+      // Fetch content if requested
+      if (fetch_content && results.length > 0) {
+        const urls = results.map((r) => r.link);
+        const fetchResults = await fetchMultipleWebpagesToMarkdown(urls, {
+          timeout: Math.min(timeout, 30000), // Cap at 30s per fetch
+          optimizeForLLM: true,
+          maxLength: max_content_length,
+        });
+
+        // Update results with fetched content
+        fetchResults.forEach((fetchResult, index) => {
+          const result = results[index];
+          if (result && fetchResult.success && fetchResult.content) {
+            result.content = fetchResult.content.substring(0, max_content_length);
+          } else if (result && fetchResult.error) {
+            result.content = `[Failed to fetch content: ${fetchResult.error}]`;
+          }
+        });
+      }
+
       // Format output
       if (results.length === 0) {
         const errors = Object.entries(sources)
@@ -153,6 +184,92 @@ export function createWebSearchTool(directory: string, config?: PluginConfig) {
       }`;
 
       return `${summary}\n\n${formatted}`;
+    },
+  });
+}
+
+export function createWebFetchTool(_directory: string, _config?: PluginConfig) {
+  return tool({
+    description:
+      'Fetch webpages and convert them to LLM-optimized markdown. Useful for getting detailed content from URLs found in search results or other sources.',
+    args: {
+      urls: tool.schema.array(tool.schema.string()).min(1).max(10),
+      timeout: tool.schema.number().int().positive().max(120000).optional(),
+      optimize_for_llm: tool.schema.boolean().optional(),
+      max_content_length: tool.schema.number().int().positive().max(50000).optional(),
+      include_summary: tool.schema.boolean().optional(),
+    },
+    async execute(args, _context: ToolContext): Promise<string> {
+      const {
+        urls,
+        timeout = 30000,
+        optimize_for_llm = true,
+        max_content_length = 10000,
+        include_summary = true,
+      } = args;
+
+      // Validate URLs
+      const validUrls: string[] = [];
+      const invalidUrls: string[] = [];
+
+      urls.forEach((url) => {
+        try {
+          new URL(url);
+          validUrls.push(url);
+        } catch {
+          invalidUrls.push(url);
+        }
+      });
+
+      if (validUrls.length === 0) {
+        return `No valid URLs provided. Invalid URLs: ${invalidUrls.join(', ')}`;
+      }
+
+      // Fetch webpages
+      const results = await fetchMultipleWebpagesToMarkdown(validUrls, {
+        timeout,
+        optimizeForLLM: optimize_for_llm,
+        maxLength: max_content_length,
+      });
+
+      // Format output
+      let output = '';
+
+      if (include_summary) {
+        output += `${summarizeFetchResults(results)}\n\n`;
+      }
+
+      // Add detailed results
+      output += '## Detailed Results\n\n';
+      results.forEach((result, index) => {
+        output += `### ${index + 1}. ${result.url}\n`;
+        output += `**Title**: ${result.title || 'No title'}\n`;
+        output += `**Status**: ${result.success ? '✅ Success' : `❌ Failed: ${result.error}`}\n`;
+
+        if (result.success) {
+          output += `**Content length**: ${result.length} characters\n`;
+          output += `**Fetch time**: ${result.metadata.fetchTime}ms\n`;
+          output += `**Compression**: ${(result.metadata.compressionRatio * 100).toFixed(1)}%\n\n`;
+
+          // Add content preview
+          const previewLength = Math.min(500, result.content.length);
+          output += '**Content preview**:\n```markdown\n';
+          output += result.content.substring(0, previewLength);
+          if (result.content.length > previewLength) {
+            output += '...\n';
+          }
+          output += '```\n\n';
+        } else {
+          output += '\n';
+        }
+      });
+
+      // Add warning about invalid URLs if any
+      if (invalidUrls.length > 0) {
+        output += `\n**Warning**: ${invalidUrls.length} invalid URL(s) were ignored: ${invalidUrls.join(', ')}`;
+      }
+
+      return output;
     },
   });
 }
