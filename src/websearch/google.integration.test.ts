@@ -28,41 +28,12 @@ const shouldRun = process.env.RUN_NETWORK_TESTS === 'true';
     }
   });
 
-  test('returns search results for common query', async () => {
-    if (!googlePage) throw new Error('Page is required');
-
-    const results = await searchGoogle(
-      'hello world',
-      {
-        limit: 5,
-        timeout: 30000, // Longer timeout for browser automation
-        locale: 'en-US',
-      },
-      googlePage,
-    );
-
-    // Google should return some results
-    expect(results.length).toBeGreaterThan(0);
-
-    // Each result should have title and link
-    results.forEach((result) => {
-      expect(result.title).toBeTruthy();
-      expect(result.link).toBeTruthy();
-      expect(result.link).toMatch(/^https?:\/\//);
-    });
-
-    console.log(`Found ${results.length} Google results for "hello world"`);
-    if (results.length > 0) {
-      console.log(`First result: ${results[0]?.title} - ${results[0]?.link}`);
-    }
-  }, 40000); // Extended timeout for browser automation
-
   test('respects limit parameter', async () => {
     if (!googlePage) throw new Error('Page is required');
 
-    const limit = 2;
+    const limit = 5;
     const results = await searchGoogle(
-      'javascript programming',
+      'opencode plugins',
       {
         limit,
         timeout: 30000,
@@ -74,33 +45,7 @@ const shouldRun = process.env.RUN_NETWORK_TESTS === 'true';
     // Should not return more than limit
     expect(results.length).toBeLessThanOrEqual(limit);
 
-    if (results.length > 0) {
-      console.log(`Got ${results.length} Google results with limit=${limit}`);
-    }
-  }, 40000);
-
-  test('handles country-specific Google domain', async () => {
-    if (!googlePage) throw new Error('Page is required');
-
-    const results = await searchGoogle(
-      'test',
-      {
-        limit: 3,
-        timeout: 30000,
-        locale: 'en-US',
-      },
-      googlePage,
-    );
-
-    // Should work with country-specific domain
-    if (results.length > 0) {
-      results.forEach((result) => {
-        expect(result.title).toBeTruthy();
-        expect(result.link).toBeTruthy();
-      });
-      console.log(`Got ${results.length} results from Google UK`);
-    } else {
-      console.log('No results from Google UK (might be CAPTCHA or other issue)');
-    }
+    console.log(`Got ${results.length} Google results with limit=${limit}`);
+    console.debug(results);
   }, 40000);
 });

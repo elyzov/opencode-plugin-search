@@ -24,29 +24,33 @@ export async function searchGoogle(
 
     // Extract results using simplified approach
     const results = await page.evaluate((limit: number) => {
-      const extracted: Array<{ title: string; link: string }> = [];
-      const seenUrls = new Set<string>();
-
-      // Strategy 1: Find links that contain h3 elements (main search results)
-      const resultLinks = Array.from(document.querySelectorAll('a')).filter((a) => {
-        return a.querySelector('h3') && a.href && a.href.startsWith('http');
-      });
-
-      for (const linkEl of resultLinks) {
-        if (extracted.length >= limit) break;
-
-        const link = linkEl.href;
-        if (!link || seenUrls.has(link) || link.includes('google.com/')) continue;
-
-        const titleEl = linkEl.querySelector('h3');
-        const title = titleEl ? (titleEl.textContent || '').trim() : '';
-        if (!title) continue;
-
-        extracted.push({ title, link });
-        seenUrls.add(link);
-      }
-
-      return extracted.slice(0, limit);
+      return Array.from(document.querySelectorAll('a'))
+        .filter((a) => {
+          console.log('link', a.textContent, a.href);
+          const hasH3 = a.querySelector('h3');
+          const hasValidHref = a.href && (a.href.startsWith('http') || a.href.includes('/url?'));
+          return hasH3 && hasValidHref;
+        })
+        .map((a) => {
+          let link = a.href;
+          // Extract actual URL from Google's redirect links
+          if (link.includes('/url?')) {
+            const urlMatch = link.match(/[?&]url=([^&]+)/);
+            if (urlMatch?.[1]) {
+              link = decodeURIComponent(urlMatch[1]);
+            }
+          }
+          const h3 = a.querySelector('h3');
+          const title = h3 ? (h3.textContent || '').trim() : '';
+          return { title, link };
+        })
+        .filter(
+          (result) =>
+            result.link &&
+            !result.link.includes('google.com/search') &&
+            !result.link.includes('google.com/preferences'),
+        )
+        .slice(0, limit);
     }, options.limit);
 
     return results;
