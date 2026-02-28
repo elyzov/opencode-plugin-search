@@ -25,6 +25,27 @@ Add this plugin to your OpenCode configuration:
 
 Ensure `ast-grep` is installed and available in your PATH (or via devbox) for AST-based search functionality.
 
+## Legal Disclaimer
+
+### General Disclaimer
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+### ⚠️ Web Search Usage Restrictions
+
+**Important**: This plugin's web search functionality:
+- Uses browser automation to scrape Google and DuckDuckGo search results
+- **Likely violates** both services' Terms of Service
+- May result in IP blocking, CAPTCHAs, or legal action
+- Should be used **only for personal, non-commercial purposes**
+- Does **not** implement automatic rate limiting - users should implement their own if needed
+- Users assume **all legal responsibility** for any consequences of use
+
+**Consider using official APIs instead:**
+- [Google Custom Search JSON API](https://developers.google.com/custom-search/v1/overview) (requires API key, may have costs)
+- [DuckDuckGo Instant Answer API](https://duckduckgo.com/api)
+
+**Note**: The DuckDuckGo implementation uses browser automation, not their public API. The author provides this plugin "as is" and accepts no responsibility for any issues arising from its use.
+
 ### System Requirements
 
 #### Google Search (Browser Required)
@@ -48,9 +69,9 @@ The Google search feature requires a Chrome/Chromium browser. The plugin support
 **Option 4: Custom Browser Path**
 - Specify exact browser location: `executablePath: "/usr/bin/chromium"`
 
-#### DuckDuckGo Search - No Browser Required
-- DuckDuckGo search uses their public API and has no external dependencies
-- Recommended if you don't need Google-specific results
+#### DuckDuckGo Search - Browser Required
+- DuckDuckGo search uses browser automation (not their public API) and requires Chrome/Chromium
+- May have fewer CAPTCHA challenges than Google search
 
 #### Webpage Fetching - No Browser Required
 - The webpage fetching feature uses native Node.js `fetch` API
@@ -311,7 +332,7 @@ Search the web using Google and/or DuckDuckGo search engines. If multiple engine
 }
 ```
 
-**Note**: Google search requires a Chrome/Chromium browser (see System Requirements above). Browser configuration is handled via configuration files - see Configuration section. DuckDuckGo uses their public API and has no additional dependencies. Content fetching uses native Node.js `fetch` and requires no browser.
+**Note**: Google search requires a Chrome/Chromium browser (see System Requirements above). Browser configuration is handled via configuration files - see Configuration section. DuckDuckGo search also uses browser automation and requires Chrome/Chromium. Content fetching uses native Node.js `fetch` and requires no browser.
 
 ### `web_fetch_urls`
 

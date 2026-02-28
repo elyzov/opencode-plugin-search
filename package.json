@@ -1,6 +1,6 @@
 {
   "name": "opencode-plugin-search",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "description": "An OpenCode plugin providing advanced code search capabilities including AST-based structural search using ast-grep.",
   "type": "module",
   "main": "dist/index.js",
