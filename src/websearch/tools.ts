@@ -105,8 +105,11 @@ export function createWebSearchTool(directory: string, config?: PluginConfig) {
       }
 
       if (engines.duckduckgo) {
+        // Create new browser page for DuckDuckGo
+        const duckduckgoPage = await browser.newPage();
+
         searchPromises.push(
-          searchDuckDuckGo(query, { ...engines.duckduckgo, limit, timeout, locale })
+          searchDuckDuckGo(query, { ...engines.duckduckgo, limit, timeout, locale }, duckduckgoPage)
             .then((ddResults) => {
               sources.duckduckgo = { count: ddResults.length, success: true };
               ddResults.forEach((result, index) => {
@@ -123,6 +126,9 @@ export function createWebSearchTool(directory: string, config?: PluginConfig) {
                 success: false,
                 error: error instanceof Error ? error.message : String(error),
               };
+            })
+            .finally(() => {
+              duckduckgoPage.close();
             }),
         );
       }
