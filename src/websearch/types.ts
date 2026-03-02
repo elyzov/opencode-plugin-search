@@ -28,8 +28,6 @@ export interface GoogleSearchOptions extends BaseSearchOptions {
 
 export interface DuckDuckGoSearchOptions extends BaseSearchOptions {
   safe_search?: boolean;
-  region?: string;
-  time_range?: 'd' | 'w' | 'm' | 'y';
 }
 
 export interface DuckDuckGoApiResponse {

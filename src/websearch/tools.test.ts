@@ -49,7 +49,7 @@ mock.module('./google', () => ({
 }));
 
 // Import after mocking
-const { createWebSearchTool, createWebFetchTool } = await import('./tools');
+const { createSearchWebTool, createWebFetchTool } = await import('./tools');
 
 describe('websearch tools', () => {
   const mockContext: ToolContext = {
@@ -64,17 +64,16 @@ describe('websearch tools', () => {
   };
 
   test('creates a tool with execute method', () => {
-    const tool = createWebSearchTool('.');
+    const tool = createSearchWebTool('.');
     expect(tool).toBeDefined();
     expect(typeof tool.execute).toBe('function');
   });
 
   test('handles empty results from all engines', async () => {
-    const tool = createWebSearchTool('.');
+    const tool = createSearchWebTool('.');
     const result = await tool.execute(
       {
         query: 'test query',
-        engines: { duckduckgo: {} },
         limit: 5,
         timeout: 1000,
         locale: 'en-US',
@@ -135,12 +134,11 @@ describe('websearch tools', () => {
       ]),
     }));
 
-    const { createWebSearchTool: createTool } = await import('./tools');
+    const { createSearchWebTool: createTool } = await import('./tools');
     const tool = createTool('.');
     const result = await tool.execute(
       {
         query: 'test query',
-        engines: { google: {}, duckduckgo: {} },
         limit: 5,
         timeout: 1000,
         locale: 'en-US',
@@ -162,12 +160,11 @@ describe('websearch tools', () => {
       ]),
     }));
 
-    const { createWebSearchTool: createTool } = await import('./tools');
+    const { createSearchWebTool: createTool } = await import('./tools');
     const tool = createTool('.');
     const result = await tool.execute(
       {
         query: 'test query',
-        engines: { duckduckgo: {} },
         fetch_content: true,
         max_content_length: 5000,
       },

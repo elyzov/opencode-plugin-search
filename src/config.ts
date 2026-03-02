@@ -4,8 +4,27 @@ import { join } from 'node:path';
 
 import type { BrowserConfig } from './websearch';
 
+export interface SearchEngineConfig {
+  /** Whether this search engine is enabled */
+  enabled?: boolean;
+  /** Weight for distributing results limit (0-1, sum of all engine weights should be 1) */
+  weight?: number;
+  /** Engine-specific options */
+  options?: {
+    /** Enable safe search filtering */
+    safe_search?: boolean;
+    /** Reuse browser session (experimental) */
+    use_saved_state?: boolean;
+  };
+}
+
 export interface PluginConfig {
   browser?: BrowserConfig;
+  /** Search engine configuration */
+  searchEngines?: {
+    google?: SearchEngineConfig;
+    duckduckgo?: SearchEngineConfig;
+  };
 }
 
 /**
@@ -44,6 +63,9 @@ export async function loadConfig(projectDir?: string): Promise<PluginConfig> {
 function mergeConfig(target: PluginConfig, source: Partial<PluginConfig>) {
   if (source.browser) {
     target.browser = { ...target.browser, ...source.browser };
+  }
+  if (source.searchEngines) {
+    target.searchEngines = { ...target.searchEngines, ...source.searchEngines };
   }
 }
 

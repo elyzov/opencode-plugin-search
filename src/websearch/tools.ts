@@ -1,41 +1,127 @@
 import path from 'node:path';
 import { type ToolContext, tool } from '@opencode-ai/plugin';
-import type { PluginConfig } from '../config';
+import type { PluginConfig, SearchEngineConfig } from '../config';
 import { getBrowser } from './browser';
 import { searchDuckDuckGo } from './duckduckgo';
 import { fetchMultipleWebpagesToMarkdown, summarizeFetchResults } from './fetcher';
 import { searchGoogle } from './google';
 import type { GoogleSearchOptions, SearchEngineResult, SearchResponse } from './types';
 
-const searchEngineOptionsSchema = tool.schema
-  .object({
-    duckduckgo: tool.schema
-      .object({
-        safe_search: tool.schema.boolean().optional(),
-        region: tool.schema.string().optional(),
-        time_range: tool.schema.enum(['d', 'w', 'm', 'y']).optional(), // day, week, month, year
-      })
-      .optional(),
-    google: tool.schema
-      .object({
-        safe_search: tool.schema.boolean().optional(),
-        country: tool.schema.string().optional(),
-        headless: tool.schema.boolean().optional(),
-        use_saved_state: tool.schema.boolean().optional(),
-      })
-      .optional(),
-  })
-  .refine((obj) => obj.duckduckgo !== undefined || obj.google !== undefined, {
-    message: 'At least one search engine must be specified (duckduckgo or google)',
-  });
+interface EngineConfigWithWeight {
+  name: 'google' | 'duckduckgo';
+  weight: number;
+  config: SearchEngineConfig;
+}
 
-export function createWebSearchTool(directory: string, config?: PluginConfig) {
+/**
+ * Get enabled search engines with normalized weights from config
+ */
+function getEnabledEngines(config?: PluginConfig): EngineConfigWithWeight[] {
+  const engines: EngineConfigWithWeight[] = [];
+  const searchEngines = config?.searchEngines;
+
+  // Default configuration if not specified
+  const defaultEngines = {
+    google: { enabled: true, weight: 1 },
+    duckduckgo: { enabled: true, weight: 1 },
+  };
+
+  // Check Google
+  const googleConfig = searchEngines?.google ?? defaultEngines.google;
+  if (googleConfig.enabled !== false) {
+    engines.push({
+      name: 'google',
+      weight: googleConfig.weight ?? 1,
+      config: googleConfig,
+    });
+  }
+
+  // Check DuckDuckGo
+  const duckduckgoConfig = searchEngines?.duckduckgo ?? defaultEngines.duckduckgo;
+  if (duckduckgoConfig.enabled !== false) {
+    engines.push({
+      name: 'duckduckgo',
+      weight: duckduckgoConfig.weight ?? 1,
+      config: duckduckgoConfig,
+    });
+  }
+
+  // If no engines enabled, default to both with equal weights
+  if (engines.length === 0) {
+    engines.push(
+      { name: 'google', weight: 1, config: defaultEngines.google },
+      { name: 'duckduckgo', weight: 1, config: defaultEngines.duckduckgo },
+    );
+  }
+
+  // Normalize weights to sum to 1
+  const totalWeight = engines.reduce((sum, engine) => sum + engine.weight, 0);
+  if (totalWeight > 0) {
+    engines.forEach((engine) => {
+      engine.weight = engine.weight / totalWeight;
+    });
+  }
+
+  return engines;
+}
+
+/**
+ * Calculate per-engine limits based on total limit and weights
+ */
+function calculateEngineLimits(
+  engines: EngineConfigWithWeight[],
+  totalLimit: number,
+): Map<'google' | 'duckduckgo', number> {
+  const limits = new Map<'google' | 'duckduckgo', number>();
+  let remaining = totalLimit;
+  let allocated = 0;
+
+  // Sort engines by weight descending for fair allocation
+  const sortedEngines = [...engines].sort((a, b) => b.weight - a.weight);
+
+  for (const engine of sortedEngines) {
+    // Calculate proportional limit, rounding to nearest integer
+    let engineLimit = Math.round(engine.weight * totalLimit);
+
+    // Ensure at least 1 result if weight > 0
+    if (engineLimit < 1 && engine.weight > 0) {
+      engineLimit = 1;
+    }
+
+    // Adjust if we would exceed total limit
+    if (allocated + engineLimit > totalLimit) {
+      engineLimit = totalLimit - allocated;
+    }
+
+    // Ensure we don't allocate more than remaining
+    engineLimit = Math.min(engineLimit, remaining);
+
+    if (engineLimit > 0) {
+      limits.set(engine.name, engineLimit);
+      allocated += engineLimit;
+      remaining -= engineLimit;
+    }
+  }
+
+  // If there are still remaining slots (due to rounding), distribute them
+  if (remaining > 0) {
+    for (const engine of sortedEngines) {
+      if (remaining <= 0) break;
+      const currentLimit = limits.get(engine.name) || 0;
+      limits.set(engine.name, currentLimit + 1);
+      remaining -= 1;
+    }
+  }
+
+  return limits;
+}
+
+export function createSearchWebTool(directory: string, config?: PluginConfig) {
   return tool({
     description:
-      'Search the web using Google and/or DuckDuckGo. If multiple engines are specified, queries run in parallel.',
+      'Search the web using configured search engines (Google and/or DuckDuckGo). Engines are configured via plugin configuration file. Results are combined and optionally fetched with content extraction.',
     args: {
       query: tool.schema.string(),
-      engines: searchEngineOptionsSchema,
       limit: tool.schema.number().int().positive().max(50).optional(),
       timeout: tool.schema.number().int().positive().max(120000).optional(),
       locale: tool.schema.string().optional(),
@@ -45,7 +131,6 @@ export function createWebSearchTool(directory: string, config?: PluginConfig) {
     async execute(args, _context: ToolContext): Promise<string> {
       const {
         query,
-        engines,
         limit = 10,
         timeout = 30000,
         locale = 'en-US',
@@ -55,6 +140,18 @@ export function createWebSearchTool(directory: string, config?: PluginConfig) {
 
       const results: SearchEngineResult[] = [];
       const sources: SearchResponse['sources'] = {};
+
+      // Get enabled engines with normalized weights
+      const enabledEngines = getEnabledEngines(config);
+      if (enabledEngines.length === 0) {
+        return 'No search engines enabled. Please configure at least one search engine in plugin configuration.';
+      }
+
+      // Calculate per-engine limits based on weights
+      const engineLimits = calculateEngineLimits(enabledEngines, limit);
+      console.log(
+        `Searching with engines: ${enabledEngines.map((e) => `${e.name} (weight: ${e.weight.toFixed(2)}, limit: ${engineLimits.get(e.name)})`).join(', ')}`,
+      );
 
       if (config?.browser?.executablePath) {
         // If the executable path is relative, prepend the plugin directory
@@ -67,70 +164,82 @@ export function createWebSearchTool(directory: string, config?: PluginConfig) {
       const browserInstance = await getBrowser(config?.browser);
       const browser = browserInstance.getPuppeteerBrowser();
 
-      if (engines.google) {
-        // Merge user config with LLM options (LLM options take precedence)
-        const googleOptions: GoogleSearchOptions = {
-          ...engines.google, // LLM options (overrides user config for overlapping fields)
-          limit,
-          timeout,
-          locale,
-        };
+      for (const engine of enabledEngines) {
+        const engineLimit = engineLimits.get(engine.name);
+        if (!engineLimit || engineLimit < 1) continue;
 
-        // Create new browser page
-        const googlePage = await browser.newPage();
+        if (engine.name === 'google') {
+          const googleOptions: GoogleSearchOptions = {
+            limit: engineLimit,
+            timeout,
+            locale,
+            safe_search: engine.config.options?.safe_search,
+            use_saved_state: engine.config.options?.use_saved_state,
+          };
 
-        searchPromises.push(
-          searchGoogle(query, googleOptions, googlePage)
-            .then((googleResults) => {
-              sources.google = { count: googleResults.length, success: true };
-              googleResults.forEach((result, index) => {
-                results.push({
-                  ...result,
-                  source: 'google',
-                  rank: index + 1,
+          // Create new browser page
+          const googlePage = await browser.newPage();
+
+          searchPromises.push(
+            searchGoogle(query, googleOptions, googlePage)
+              .then((googleResults) => {
+                sources.google = { count: googleResults.length, success: true };
+                googleResults.forEach((result, index) => {
+                  results.push({
+                    ...result,
+                    source: 'google',
+                    rank: index + 1,
+                  });
                 });
-              });
-            })
-            .catch((error) => {
-              sources.google = {
-                count: 0,
-                success: false,
-                error: error instanceof Error ? error.message : String(error),
-              };
-            })
-            .finally(() => {
-              googlePage.close();
-            }),
-        );
-      }
+              })
+              .catch((error) => {
+                sources.google = {
+                  count: 0,
+                  success: false,
+                  error: error instanceof Error ? error.message : String(error),
+                };
+              })
+              .finally(() => {
+                googlePage.close();
+              }),
+          );
+        } else if (engine.name === 'duckduckgo') {
+          // Create new browser page for DuckDuckGo
+          const duckduckgoPage = await browser.newPage();
 
-      if (engines.duckduckgo) {
-        // Create new browser page for DuckDuckGo
-        const duckduckgoPage = await browser.newPage();
-
-        searchPromises.push(
-          searchDuckDuckGo(query, { ...engines.duckduckgo, limit, timeout, locale }, duckduckgoPage)
-            .then((ddResults) => {
-              sources.duckduckgo = { count: ddResults.length, success: true };
-              ddResults.forEach((result, index) => {
-                results.push({
-                  ...result,
-                  source: 'duckduckgo',
-                  rank: index + 1,
+          searchPromises.push(
+            searchDuckDuckGo(
+              query,
+              {
+                limit: engineLimit,
+                timeout,
+                locale,
+                safe_search: engine.config.options?.safe_search,
+              },
+              duckduckgoPage,
+            )
+              .then((ddResults) => {
+                sources.duckduckgo = { count: ddResults.length, success: true };
+                ddResults.forEach((result, index) => {
+                  results.push({
+                    ...result,
+                    source: 'duckduckgo',
+                    rank: index + 1,
+                  });
                 });
-              });
-            })
-            .catch((error) => {
-              sources.duckduckgo = {
-                count: 0,
-                success: false,
-                error: error instanceof Error ? error.message : String(error),
-              };
-            })
-            .finally(() => {
-              duckduckgoPage.close();
-            }),
-        );
+              })
+              .catch((error) => {
+                sources.duckduckgo = {
+                  count: 0,
+                  success: false,
+                  error: error instanceof Error ? error.message : String(error),
+                };
+              })
+              .finally(() => {
+                duckduckgoPage.close();
+              }),
+          );
+        }
       }
 
       // Wait for all searches to complete (or fail)

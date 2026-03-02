@@ -22,15 +22,15 @@ describe('SearchPlugin', () => {
     expect(tools?.codebase_find_by_rule).toBeDefined();
     expect(tools?.codebase_dump_syntax).toBeDefined();
     expect(tools?.codebase_test_rule).toBeDefined();
-    expect(tools?.web_search).toBeDefined();
-    expect(tools?.web_fetch_urls).toBeDefined();
+    expect(tools?.search_web).toBeDefined();
+    expect(tools?.fetch_urls).toBeDefined();
 
     // Check that tools have execute method
     expect(typeof tools?.codebase_find?.execute).toBe('function');
     expect(typeof tools?.codebase_find_by_rule?.execute).toBe('function');
     expect(typeof tools?.codebase_dump_syntax?.execute).toBe('function');
     expect(typeof tools?.codebase_test_rule?.execute).toBe('function');
-    expect(typeof tools?.web_search?.execute).toBe('function');
-    expect(typeof tools?.web_fetch_urls?.execute).toBe('function');
+    expect(typeof tools?.search_web?.execute).toBe('function');
+    expect(typeof tools?.fetch_urls?.execute).toBe('function');
   });
 });

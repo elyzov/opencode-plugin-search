@@ -126,17 +126,45 @@ If no configuration is found, the plugin will attempt to auto-detect common brow
     "args": ["--no-sandbox", "--disable-dev-shm-usage"],
     "headless": true,
     "timeout": 30000
+  },
+  "searchEngines": {
+    "google": {
+      "enabled": true,
+      "weight": 0.6,
+      "options": {
+        "safe_search": true
+      }
+    },
+    "duckduckgo": {
+      "enabled": true,
+      "weight": 0.4,
+      "options": {
+        "safe_search": true
+      }
+    }
   }
 }
 ```
 
 **Configuration options**:
+
+**Browser options**:
 - `executablePath` (string): Browser executable path (e.g., "/usr/bin/chromium", "google-chrome-stable")
 - `browserWSEndpoint` (string): Remote debugging URL (e.g., "http://localhost:9222")
 - `browserLaunchCommand` (string): Command to launch browser (e.g., "lightpanda serve --port 9222")
 - `args` (array of strings): Additional arguments for browser launch
 - `headless` (boolean): Run browser in headless mode (default: true)
 - `timeout` (number): Timeout for browser operations in milliseconds (default: 30000)
+
+**Search engine options** (under `searchEngines`):
+- `google.enabled` (boolean): Whether Google search is enabled (default: true)
+- `google.weight` (number): Weight for distributing results (default: 1). Weights are normalized across enabled engines, so absolute values don't matter.
+- `google.options.safe_search` (boolean): Enable safe search filtering (default: false)
+- `google.options.use_saved_state` (boolean): Reuse browser session (experimental, default: false)
+
+- `duckduckgo.enabled` (boolean): Whether DuckDuckGo search is enabled (default: true)
+- `duckduckgo.weight` (number): Weight for distributing results (default: 1). Weights are normalized across enabled engines, so absolute values don't matter.
+- `duckduckgo.options.safe_search` (boolean): Enable safe search filtering (default: false)
 
 **Minimal config** (auto-detect browser):
 ```json
@@ -167,10 +195,10 @@ If no configuration is found, the plugin will attempt to auto-detect common brow
 ### Tool Arguments vs Configuration
 
 #### Web Search (Google/DuckDuckGo)
-- **Tool arguments** (provided by LLM): `query`, `engines`, `limit`, `timeout`, `locale`, `safe_search`, `country`, `headless`, `use_saved_state`, `fetch_content`, `max_content_length`
-- **User configuration** (provided via config files): `executablePath`, `browserWSEndpoint`, `browserLaunchCommand`, `args`, `headless`, `timeout`
+- **Tool arguments** (provided by LLM): `query`, `limit`, `timeout`, `locale`, `fetch_content`, `max_content_length`
+- **User configuration** (provided via config files): Search engine configuration (`searchEngines.google`, `searchEngines.duckduckgo`) with `enabled`, `weight`, and `options` (e.g., `safe_search`, `use_saved_state`). Browser configuration (`executablePath`, `browserWSEndpoint`, `browserLaunchCommand`, `args`, `headless`, `timeout`).
 
-The LLM only needs to specify search parameters, not system-specific browser paths. Browser configuration is handled through config files.
+The LLM only needs to specify search parameters, not system-specific browser paths or engine selection. Search engine and browser configuration is handled through config files.
 
 #### Webpage Fetching
 - **Tool arguments** (provided by LLM): `urls`, `timeout`, `optimize_for_llm`, `max_content_length`, `include_summary`
@@ -278,24 +306,14 @@ Test and validate structured AST rules against code snippets to ensure correct m
 ### Web Search & Fetching Tools
 Tools for searching the web and fetching webpage content.
 
-### `web_search`
+### `search_web`
 
-Search the web using Google and/or DuckDuckGo search engines. If multiple engines are specified, queries run in parallel and results are combined. Optionally fetch and convert webpage content to LLM-optimized markdown.
+Search the web using configured search engines (Google and/or DuckDuckGo). Search engines are configured via plugin configuration file. This simplifies LLM usage while allowing users to configure engines once. Results are combined based on configured engine weights and optionally fetched with content extraction.
 
 **Arguments**:
 - `query` (string): The search query
-- `engines` (object): Configuration for search engines. At least one engine must be specified.
-  - `duckduckgo` (object, optional): DuckDuckGo specific options
-    - `safe_search` (boolean): Enable safe search filtering
-    - `region` (string): Region code (e.g., "us-en", "uk-en")
-    - `time_range` (string): Time range filter: "d" (day), "w" (week), "m" (month), "y" (year)
-  - `google` (object, optional): Google specific options
-    - `safe_search` (boolean): Enable safe search filtering
-    - `country` (string): Country-specific Google domain (e.g., "co.uk", "com.au")
-    - `headless` (boolean): Run browser in headless mode (default: true). Note: headless mode may trigger CAPTCHA challenges.
-    - `use_saved_state` (boolean): Reuse browser session (experimental)
-- `limit` (number, optional): Maximum results per engine (default: 10, max: 50)
-- `timeout` (number, optional): Timeout in milliseconds per engine (default: 30000, max: 120000)
+- `limit` (number, optional): Maximum total results across all engines (default: 10, max: 50). Results are distributed among enabled engines based on configured weights.
+- `timeout` (number, optional): Timeout in milliseconds for the entire search operation (default: 30000, max: 120000)
 - `locale` (string, optional): Locale for search results (e.g., "en-US", "fr-FR")
 - `fetch_content` (boolean, optional): Fetch and convert webpage content to markdown (default: false)
 - `max_content_length` (number, optional): Maximum content length in characters when fetching content (default: 10000, max: 50000)
@@ -304,15 +322,6 @@ Search the web using Google and/or DuckDuckGo search engines. If multiple engine
 ```json
 {
   "query": "how to implement binary search in JavaScript",
-  "engines": {
-    "google": {
-      "country": "com",
-      "headless": true
-    },
-    "duckduckgo": {
-      "safe_search": true
-    }
-  },
   "limit": 5,
   "timeout": 10000,
   "locale": "en-US"
@@ -323,9 +332,6 @@ Search the web using Google and/or DuckDuckGo search engines. If multiple engine
 ```json
 {
   "query": "latest React documentation",
-  "engines": {
-    "duckduckgo": {}
-  },
   "fetch_content": true,
   "max_content_length": 5000,
   "limit": 3
@@ -339,7 +345,7 @@ Search the web using Google and/or DuckDuckGo search engines. If multiple engine
 - When `fetch_content: true`, duplicate URLs from different search engines are automatically deduplicated before fetching to avoid redundant requests.
 - Fetching content can significantly increase response time depending on website performance and size. Consider setting `timeout` appropriately.
 
-### `web_fetch_urls`
+### `fetch_urls`
 
 Fetch webpages and convert them to LLM-optimized markdown. Useful for getting detailed content from URLs found in search results or other sources. Uses the [mdream](https://github.com/harlan-zw/mdream) library for efficient HTML-to-markdown conversion optimized for LLM token usage.
 
