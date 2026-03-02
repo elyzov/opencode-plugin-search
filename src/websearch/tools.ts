@@ -116,10 +116,10 @@ function calculateEngineLimits(
   return limits;
 }
 
-export function createSearchWebTool(directory: string, config?: PluginConfig) {
+export function createResearchWebTool(directory: string, config?: PluginConfig) {
   return tool({
     description:
-      'Search the web using configured search engines (Google and/or DuckDuckGo). Engines are configured via plugin configuration file. Results are combined and optionally fetched with content extraction.',
+      'Search the web for technical information, documentation, best practices, or solutions. Use when researching libraries, APIs, development patterns, or any information not found in the local codebase. Supports Google and DuckDuckGo.',
     args: {
       query: tool.schema.string(),
       limit: tool.schema.number().int().positive().max(50).optional(),
@@ -326,10 +326,10 @@ export function createSearchWebTool(directory: string, config?: PluginConfig) {
   });
 }
 
-export function createWebFetchTool(_directory: string, _config?: PluginConfig) {
+export function createFetchWebpagesTool(_directory: string, _config?: PluginConfig) {
   return tool({
     description:
-      'Fetch webpages and convert them to LLM-optimized markdown. Useful for getting detailed content from URLs found in search results or other sources.',
+      'Fetch webpages and convert them to LLM-optimized markdown. Useful for reading detailed documentation, articles, blog posts, or technical content during development research.',
     args: {
       urls: tool.schema.array(tool.schema.string()).min(1).max(10),
       timeout: tool.schema.number().int().positive().max(120000).optional(),

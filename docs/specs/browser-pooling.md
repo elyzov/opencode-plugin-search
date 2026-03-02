@@ -50,7 +50,7 @@
 #### 2.2 Data Flow
 
 1. **Plugin Initialization** → BrowserManager connects to SQLite DB, loads existing browser states
-2. **Tool Execution** (`search_web`) → BrowserManager.getBrowser() with config + session context
+2. **Tool Execution** (`research_web`) → BrowserManager.getBrowser() with config + session context
 3. **Session Events** (`session.deleted`) → BrowserManager.cleanupSession() removes all session pages
 4. **Periodic Cleanup** → BrowserManager.cleanupIdleResources() runs on plugin init + timer
 
@@ -237,8 +237,8 @@ export const SearchPlugin: Plugin = async ({ directory }) => {
   return {
     tool: {
       // Existing tools...
-      search_web: createSearchWebTool(directory, config),
-      fetch_urls: createWebFetchTool(directory, config),
+      research_web: createResearchWebTool(directory, config),
+      fetch_webpages: createFetchWebpagesTool(directory, config),
     },
 
     // NEW: Session event handlers

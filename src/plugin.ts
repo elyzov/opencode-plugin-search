@@ -2,7 +2,7 @@ import type { Plugin } from '@opencode-ai/plugin';
 
 import { createDumpSyntaxTool, createFindByRuleTool, createFindTool, createTestRuleTool } from './astgrep';
 import { loadConfig } from './config';
-import { createSearchWebTool, createWebFetchTool } from './websearch';
+import { createFetchWebpagesTool, createResearchWebTool } from './websearch';
 
 export const SearchPlugin: Plugin = async ({ directory }) => {
   const config = await loadConfig(directory);
@@ -13,8 +13,8 @@ export const SearchPlugin: Plugin = async ({ directory }) => {
       codebase_find_by_rule: createFindByRuleTool(directory),
       codebase_dump_syntax: createDumpSyntaxTool(),
       codebase_test_rule: createTestRuleTool(directory),
-      search_web: createSearchWebTool(directory, config),
-      fetch_urls: createWebFetchTool(directory, config),
+      research_web: createResearchWebTool(directory, config),
+      fetch_webpages: createFetchWebpagesTool(directory, config),
     },
   };
 };

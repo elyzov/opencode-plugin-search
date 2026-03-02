@@ -49,7 +49,7 @@ mock.module('./google', () => ({
 }));
 
 // Import after mocking
-const { createSearchWebTool, createWebFetchTool } = await import('./tools');
+const { createResearchWebTool, createFetchWebpagesTool } = await import('./tools');
 
 describe('websearch tools', () => {
   const mockContext: ToolContext = {
@@ -64,13 +64,13 @@ describe('websearch tools', () => {
   };
 
   test('creates a tool with execute method', () => {
-    const tool = createSearchWebTool('.');
+    const tool = createResearchWebTool('.');
     expect(tool).toBeDefined();
     expect(typeof tool.execute).toBe('function');
   });
 
   test('handles empty results from all engines', async () => {
-    const tool = createSearchWebTool('.');
+    const tool = createResearchWebTool('.');
     const result = await tool.execute(
       {
         query: 'test query',
@@ -134,7 +134,7 @@ describe('websearch tools', () => {
       ]),
     }));
 
-    const { createSearchWebTool: createTool } = await import('./tools');
+    const { createResearchWebTool: createTool } = await import('./tools');
     const tool = createTool('.');
     const result = await tool.execute(
       {
@@ -160,7 +160,7 @@ describe('websearch tools', () => {
       ]),
     }));
 
-    const { createSearchWebTool: createTool } = await import('./tools');
+    const { createResearchWebTool: createTool } = await import('./tools');
     const tool = createTool('.');
     const result = await tool.execute(
       {
@@ -179,13 +179,13 @@ describe('websearch tools', () => {
   });
 
   test('creates webfetch tool with execute method', () => {
-    const tool = createWebFetchTool('.');
+    const tool = createFetchWebpagesTool('.');
     expect(tool).toBeDefined();
     expect(typeof tool.execute).toBe('function');
   });
 
   test('webfetch tool fetches multiple URLs', async () => {
-    const tool = createWebFetchTool('.');
+    const tool = createFetchWebpagesTool('.');
     const result = await tool.execute(
       {
         urls: ['https://example.com/1', 'https://example.com/2'],
@@ -205,7 +205,7 @@ describe('websearch tools', () => {
   });
 
   test('webfetch tool handles invalid URLs', async () => {
-    const tool = createWebFetchTool('.');
+    const tool = createFetchWebpagesTool('.');
     const result = await tool.execute(
       {
         urls: ['not-a-valid-url', 'https://example.com'],
@@ -218,7 +218,7 @@ describe('websearch tools', () => {
   });
 
   test('webfetch tool handles empty valid URLs', async () => {
-    const tool = createWebFetchTool('.');
+    const tool = createFetchWebpagesTool('.');
     const result = await tool.execute(
       {
         urls: ['not-a-valid-url', 'also-invalid'],

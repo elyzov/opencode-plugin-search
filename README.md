@@ -306,9 +306,9 @@ Test and validate structured AST rules against code snippets to ensure correct m
 ### Web Search & Fetching Tools
 Tools for searching the web and fetching webpage content.
 
-### `search_web`
+### `research_web`
 
-Search the web using configured search engines (Google and/or DuckDuckGo). Search engines are configured via plugin configuration file. This simplifies LLM usage while allowing users to configure engines once. Results are combined based on configured engine weights and optionally fetched with content extraction.
+Search the web for technical information, documentation, and best practices using configured search engines (Google and/or DuckDuckGo). Search engines are configured via plugin configuration file. This simplifies LLM usage while allowing users to configure engines once. Results are combined based on configured engine weights and optionally fetched with content extraction.
 
 **Arguments**:
 - `query` (string): The search query
@@ -345,9 +345,9 @@ Search the web using configured search engines (Google and/or DuckDuckGo). Searc
 - When `fetch_content: true`, duplicate URLs from different search engines are automatically deduplicated before fetching to avoid redundant requests.
 - Fetching content can significantly increase response time depending on website performance and size. Consider setting `timeout` appropriately.
 
-### `fetch_urls`
+### `fetch_webpages`
 
-Fetch webpages and convert them to LLM-optimized markdown. Useful for getting detailed content from URLs found in search results or other sources. Uses the [mdream](https://github.com/harlan-zw/mdream) library for efficient HTML-to-markdown conversion optimized for LLM token usage.
+Fetch webpages and convert them to LLM-optimized markdown. Useful for reading detailed documentation, articles, blog posts, or technical content during development research. Uses the [mdream](https://github.com/harlan-zw/mdream) library for efficient HTML-to-markdown conversion optimized for LLM token usage.
 
 **Arguments**:
 - `urls` (array of strings): URLs to fetch (1-10 URLs)
