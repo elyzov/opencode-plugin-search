@@ -149,22 +149,45 @@ export function createWebSearchTool(directory: string, config?: PluginConfig) {
 
       // Fetch content if requested
       if (fetch_content && results.length > 0) {
-        const urls = results.map((r) => r.link);
-        const fetchResults = await fetchMultipleWebpagesToMarkdown(urls, {
-          timeout: Math.min(timeout, 30000), // Cap at 30s per fetch
+        // Deduplicate URLs while maintaining mapping from each result to its content
+        const urlToIndex = new Map<string, number>();
+        const uniqueUrls: string[] = [];
+
+        for (const result of results) {
+          if (!urlToIndex.has(result.link)) {
+            urlToIndex.set(result.link, uniqueUrls.length);
+            uniqueUrls.push(result.link);
+          }
+        }
+
+        const fetchResults = await fetchMultipleWebpagesToMarkdown(uniqueUrls, {
+          timeout: Math.min(timeout, 15000), // Cap at 15s per fetch
           optimizeForLLM: true,
           maxLength: max_content_length,
         });
 
-        // Update results with fetched content
-        fetchResults.forEach((fetchResult, index) => {
-          const result = results[index];
-          if (result && fetchResult.success && fetchResult.content) {
-            result.content = fetchResult.content.substring(0, max_content_length);
-          } else if (result && fetchResult.error) {
-            result.content = `[Failed to fetch content: ${fetchResult.error}]`;
+        // Create a map from URL to fetched content
+        const urlToContent = new Map<string, string>();
+        for (const [i, url] of uniqueUrls.entries()) {
+          const fetchResult = fetchResults[i];
+          if (!fetchResult) continue;
+
+          if (fetchResult.success && fetchResult.content) {
+            urlToContent.set(url, fetchResult.content.substring(0, max_content_length));
+          } else if (fetchResult.error) {
+            urlToContent.set(url, `[Failed to fetch content: ${fetchResult.error}]`);
+          } else {
+            urlToContent.set(url, '[Failed to fetch content: Unknown error]');
           }
-        });
+        }
+
+        // Update each result with content from the map
+        for (const result of results) {
+          const content = urlToContent.get(result.link);
+          if (content) {
+            result.content = content;
+          }
+        }
       }
 
       // Format output

@@ -332,7 +332,12 @@ Search the web using Google and/or DuckDuckGo search engines. If multiple engine
 }
 ```
 
-**Note**: Google search requires a Chrome/Chromium browser (see System Requirements above). Browser configuration is handled via configuration files - see Configuration section. DuckDuckGo search also uses browser automation and requires Chrome/Chromium. Content fetching uses native Node.js `fetch` and requires no browser.
+**Notes**:
+- Google search requires a Chrome/Chromium browser (see System Requirements above). Browser configuration is handled via configuration files - see Configuration section.
+- DuckDuckGo search also uses browser automation and requires Chrome/Chromium.
+- Content fetching uses native Node.js `fetch` and requires no browser.
+- When `fetch_content: true`, duplicate URLs from different search engines are automatically deduplicated before fetching to avoid redundant requests.
+- Fetching content can significantly increase response time depending on website performance and size. Consider setting `timeout` appropriately.
 
 ### `web_fetch_urls`
 
