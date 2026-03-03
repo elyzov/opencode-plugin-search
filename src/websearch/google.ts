@@ -23,10 +23,55 @@ export async function searchGoogle(
     }
 
     // Extract results using simplified approach
-    const results = await page.evaluate((limit: number) => {
+    const results = await page.evaluate(() => {
+      // Extracts the snippet text from a Google search result item.
+      function getSnippetFromAnchor(anchor: HTMLAnchorElement) {
+        // Heuristic: an element likely contains the main snippet if its text is
+        // longer than 20 characters, contains spaces (multiple words), and has few links.
+        function isLikelySnippet(elem: Element) {
+          const text = elem.textContent.trim();
+          if (text.length <= 20 || !text.includes(' ')) return false;
+          const links = elem.querySelectorAll('a');
+          // Main snippet usually has 0–1 links (e.g., "Read more"), while sitelinks containers have many.
+          return links.length <= 2;
+        }
+
+        // Walk up the DOM starting from the anchor
+        let current: HTMLElement = anchor;
+        while (current) {
+          const parent = current.parentElement;
+          if (!parent) break;
+
+          const children = Array.from(parent.children);
+          if (children.length >= 2) {
+            // Identify the title block that contains the anchor
+            const titleBlock = children.find((child) => child.contains(anchor));
+            if (titleBlock) {
+              // Examine siblings after the title block
+              let sibling: Element | null = titleBlock.nextElementSibling;
+              while (sibling) {
+                // 1. Check if the sibling itself is the snippet container
+                if (isLikelySnippet(sibling)) {
+                  return sibling.textContent.trim();
+                }
+                // 2. Look deeper for a descendant that holds the snippet
+                const descendants = Array.from(sibling.querySelectorAll('*'));
+                for (const el of descendants) {
+                  if (isLikelySnippet(el)) {
+                    return el.textContent.trim();
+                  }
+                }
+                sibling = sibling.nextElementSibling;
+              }
+            }
+          }
+          current = parent;
+        }
+        return null; // No snippet found
+      }
+
       return Array.from(document.querySelectorAll('a'))
         .filter((a) => {
-          console.log('link', a.textContent, a.href);
           const hasH3 = a.querySelector('h3');
           const hasValidHref = a.href && (a.href.startsWith('http') || a.href.includes('/url?'));
           return hasH3 && hasValidHref;
@@ -42,16 +87,18 @@ export async function searchGoogle(
           }
           const h3 = a.querySelector('h3');
           const title = h3 ? (h3.textContent || '').trim() : '';
-          return { title, link };
+          const snippet = getSnippetFromAnchor(a) || '';
+
+          return { title, link, snippet };
         })
         .filter(
           (result) =>
             result.link &&
+            result.snippet &&
             !result.link.includes('google.com/search') &&
             !result.link.includes('google.com/preferences'),
-        )
-        .slice(0, limit);
-    }, options.limit);
+        );
+    });
 
     return results;
   } catch (error) {

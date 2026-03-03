@@ -1,7 +1,7 @@
 export interface SearchEngineResult {
   title: string;
   link: string;
-  content?: string;
+  snippet?: string;
   source: 'google' | 'duckduckgo';
   rank: number;
 }
@@ -16,7 +16,6 @@ export interface SearchResponse {
 }
 
 export interface BaseSearchOptions {
-  limit: number;
   timeout: number;
   locale: string;
 }

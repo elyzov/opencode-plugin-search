@@ -17,7 +17,7 @@ export async function searchDuckDuckGo(
     await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: options.timeout });
 
     // Extract results using DuckDuckGo's HTML structure
-    const results = await page.evaluate((limit: number) => {
+    const results = await page.evaluate(() => {
       // DuckDuckGo search results are in <li> elements with data-layout="organic"
       const resultElements = Array.from(document.querySelectorAll('li[data-layout="organic"]'));
 
@@ -31,20 +31,19 @@ export async function searchDuckDuckGo(
           const link = titleLink.href;
 
           // Try to extract snippet/content
-          let content = '';
+          let snippet = '';
           const snippetElement = li.querySelector('[data-result="snippet"]');
           if (snippetElement) {
-            content = snippetElement.textContent?.trim() || '';
+            snippet = snippetElement.textContent?.trim() || '';
           }
 
-          return { title, link, content };
+          return { title, link, snippet };
         })
         .filter(
-          (result): result is { title: string; link: string; content: string } =>
+          (result): result is { title: string; link: string; snippet: string } =>
             result?.link.startsWith('http') || false,
-        )
-        .slice(0, limit);
-    }, options.limit);
+        );
+    });
 
     return results;
   } catch (error) {
