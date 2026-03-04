@@ -308,17 +308,15 @@ Tools for searching the web and fetching webpage content.
 
 ### `research_web`
 
-Search the web for technical information, documentation, and best practices using configured search engines (Google and/or DuckDuckGo). Search engines are configured via plugin configuration file. This simplifies LLM usage while allowing users to configure engines once. Results are combined based on configured engine weights and optionally fetched with content extraction.
+Search the web for technical information, documentation, and best practices using configured search engines (Google and/or DuckDuckGo). Search engines are configured via plugin configuration file. This simplifies LLM usage while allowing users to configure engines once. Results are combined based on configured engine weights.
 
 **Arguments**:
 - `query` (string): The search query
-- `limit` (number, optional): Maximum total results across all engines (default: 10, max: 50). Results are distributed among enabled engines based on configured weights.
+- `limit` (number, optional): Maximum total results across all engines (default: 10, max: 20). Results are distributed among enabled engines based on configured weights.
 - `timeout` (number, optional): Timeout in milliseconds for the entire search operation (default: 30000, max: 120000)
 - `locale` (string, optional): Locale for search results (e.g., "en-US", "fr-FR")
-- `fetch_content` (boolean, optional): Fetch and convert webpage content to markdown (default: false)
-- `max_content_length` (number, optional): Maximum content length in characters when fetching content (default: 10000, max: 50000)
 
-**Example - Basic search**:
+**Example**:
 ```json
 {
   "query": "how to implement binary search in JavaScript",
@@ -328,22 +326,8 @@ Search the web for technical information, documentation, and best practices usin
 }
 ```
 
-**Example - Search with content fetching**:
-```json
-{
-  "query": "latest React documentation",
-  "fetch_content": true,
-  "max_content_length": 5000,
-  "limit": 3
-}
-```
-
 **Notes**:
-- Google search requires a Chrome/Chromium browser (see System Requirements above). Browser configuration is handled via configuration files - see Configuration section.
-- DuckDuckGo search also uses browser automation and requires Chrome/Chromium.
-- Content fetching uses native Node.js `fetch` and requires no browser.
-- When `fetch_content: true`, duplicate URLs from different search engines are automatically deduplicated before fetching to avoid redundant requests.
-- Fetching content can significantly increase response time depending on website performance and size. Consider setting `timeout` appropriately.
+- Web search requires a Chrome/Chromium browser (see System Requirements above). Browser configuration is handled via configuration files - see Configuration section.
 
 ### `fetch_webpages`
 
