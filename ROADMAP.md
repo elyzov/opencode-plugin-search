@@ -11,6 +11,7 @@ The plugin provides core AST-based search capabilities using [ast-grep](https://
 - **✅ ast_grep_dump_syntax**: AST/CST visualization for debugging
 - **✅ ast_grep_test_rule**: Rule validation against code snippets
 - **✅ Structured rule validation**: Zod-based schema validation to prevent parse errors
+- **✅ Web search**: Search the web using Google and DuckDuckGo engines
 
 ## Phase 1: Immediate Improvements (High Impact)
 

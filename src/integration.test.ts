@@ -20,7 +20,7 @@ describe('integration (requires ast-grep)', () => {
   test('finds console.log statements using plugin tool', async () => {
     const pluginInput = { directory: fixturesDir } as PluginInput;
     const plugin = await SearchPlugin(pluginInput);
-    const findTool = plugin.tool?.ast_grep_find;
+    const findTool = plugin.tool?.codebase_find;
 
     expect(findTool).toBeDefined();
     expect(typeof findTool?.execute).toBe('function');
@@ -43,7 +43,7 @@ describe('integration (requires ast-grep)', () => {
   test('dumps syntax tree using plugin tool', async () => {
     const pluginInput = { directory: fixturesDir } as PluginInput;
     const plugin = await SearchPlugin(pluginInput);
-    const dumpSyntaxTool = plugin.tool?.ast_grep_dump_syntax;
+    const dumpSyntaxTool = plugin.tool?.codebase_dump_syntax;
 
     expect(dumpSyntaxTool).toBeDefined();
     expect(typeof dumpSyntaxTool?.execute).toBe('function');
@@ -65,7 +65,7 @@ describe('integration (requires ast-grep)', () => {
   test('tests structured rule using plugin tool', async () => {
     const pluginInput = { directory: fixturesDir } as PluginInput;
     const plugin = await SearchPlugin(pluginInput);
-    const testRuleTool = plugin.tool?.ast_grep_test_rule;
+    const testRuleTool = plugin.tool?.codebase_test_rule;
 
     expect(testRuleTool).toBeDefined();
     expect(typeof testRuleTool?.execute).toBe('function');

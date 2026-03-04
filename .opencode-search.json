@@ -1,0 +1,6 @@
+{
+  "browser": {
+    "executablePath": ".devbox/nix/profile/default/bin/chromium",
+    "headless": true
+  }
+}

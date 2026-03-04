@@ -18,15 +18,19 @@ describe('SearchPlugin', () => {
     const tools = plugin.tool;
 
     // Check that all expected tools are present
-    expect(tools?.ast_grep_find).toBeDefined();
-    expect(tools?.ast_grep_find_by_rule).toBeDefined();
-    expect(tools?.ast_grep_dump_syntax).toBeDefined();
-    expect(tools?.ast_grep_test_rule).toBeDefined();
+    expect(tools?.codebase_find).toBeDefined();
+    expect(tools?.codebase_find_by_rule).toBeDefined();
+    expect(tools?.codebase_dump_syntax).toBeDefined();
+    expect(tools?.codebase_test_rule).toBeDefined();
+    expect(tools?.research_web).toBeDefined();
+    expect(tools?.fetch_webpages).toBeDefined();
 
     // Check that tools have execute method
-    expect(typeof tools?.ast_grep_find?.execute).toBe('function');
-    expect(typeof tools?.ast_grep_find_by_rule?.execute).toBe('function');
-    expect(typeof tools?.ast_grep_dump_syntax?.execute).toBe('function');
-    expect(typeof tools?.ast_grep_test_rule?.execute).toBe('function');
+    expect(typeof tools?.codebase_find?.execute).toBe('function');
+    expect(typeof tools?.codebase_find_by_rule?.execute).toBe('function');
+    expect(typeof tools?.codebase_dump_syntax?.execute).toBe('function');
+    expect(typeof tools?.codebase_test_rule?.execute).toBe('function');
+    expect(typeof tools?.research_web?.execute).toBe('function');
+    expect(typeof tools?.fetch_webpages?.execute).toBe('function');
   });
 });

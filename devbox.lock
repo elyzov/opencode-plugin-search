@@ -148,6 +148,42 @@
     "github:NixOS/nixpkgs/nixpkgs-unstable": {
       "last_modified": "2026-02-16T02:09:13Z",
       "resolved": "github:NixOS/nixpkgs/d1c15b7d5806069da59e819999d70e1cec0760bf?lastModified=1771207753&narHash=sha256-b9uG8yN50DRQ6A7JdZBfzq718ryYrlmGgqkRm9OOwCE%3D"
+    },
+    "ungoogled-chromium@latest": {
+      "last_modified": "2026-02-23T15:40:43Z",
+      "resolved": "github:NixOS/nixpkgs/80d901ec0377e19ac3f7bb8c035201e2e098cc97#ungoogled-chromium",
+      "source": "devbox-search",
+      "version": "145.0.7632.109",
+      "systems": {
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/lqbhhshd4hr6scikm61qwzbb6x5bii98-ungoogled-chromium-145.0.7632.109",
+              "default": true
+            },
+            {
+              "name": "sandbox",
+              "path": "/nix/store/d3bpf3jxdbjxqn1fy6ddn9g7jn7msdwx-ungoogled-chromium-145.0.7632.109-sandbox"
+            }
+          ],
+          "store_path": "/nix/store/lqbhhshd4hr6scikm61qwzbb6x5bii98-ungoogled-chromium-145.0.7632.109"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/lkv37d4p8qhdfvh8j4rx04z1rxzys5gw-ungoogled-chromium-145.0.7632.109",
+              "default": true
+            },
+            {
+              "name": "sandbox",
+              "path": "/nix/store/bdjbnm5qp7pdddxnqfl99ib58ynklpvy-ungoogled-chromium-145.0.7632.109-sandbox"
+            }
+          ],
+          "store_path": "/nix/store/lkv37d4p8qhdfvh8j4rx04z1rxzys5gw-ungoogled-chromium-145.0.7632.109"
+        }
+      }
     }
   }
 }
