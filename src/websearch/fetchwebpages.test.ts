@@ -50,18 +50,65 @@ describe('fetch_webpages tools', () => {
       {
         urls: ['https://example.com/1', 'https://example.com/2'],
         timeout: 5000,
-        optimize_for_llm: true,
-        max_content_length: 5000,
-        include_summary: true,
       },
       mockContext,
     );
 
-    expect(result).toContain('Summary:');
     expect(result).toContain('https://example.com/1');
     expect(result).toContain('https://example.com/2');
     expect(result).toContain('Fetched:');
-    expect(result).toContain('Content preview');
+    expect(result).toContain('Content');
+  });
+
+  test('webfetch tool fetches single URL via url parameter', async () => {
+    const tool = createFetchWebpagesTool('.');
+    const result = await tool.execute(
+      {
+        url: 'https://example.com/single',
+        timeout: 5000,
+      },
+      mockContext,
+    );
+
+    expect(result).toContain('https://example.com/single');
+    expect(result).toContain('Fetched:');
+    expect(result).toContain('Content');
+  });
+
+  test('webfetch tool handles JSON string urls parameter', async () => {
+    const tool = createFetchWebpagesTool('.');
+    const result = await tool.execute(
+      {
+        // Simulate LLM passing JSON string instead of array (edge case)
+        // biome-ignore lint/suspicious/noExplicitAny: intentional for testing edge case
+        urls: '["https://example.com/json1", "https://example.com/json2"]' as any,
+        timeout: 5000,
+      },
+      mockContext,
+    );
+
+    expect(result).toContain('https://example.com/json1');
+    expect(result).toContain('https://example.com/json2');
+    expect(result).toContain('Fetched:');
+    expect(result).toContain('Content');
+  });
+
+  test('webfetch tool combines url and urls parameters', async () => {
+    const tool = createFetchWebpagesTool('.');
+    const result = await tool.execute(
+      {
+        url: 'https://example.com/single',
+        urls: ['https://example.com/array1', 'https://example.com/array2'],
+        timeout: 5000,
+      },
+      mockContext,
+    );
+
+    expect(result).toContain('https://example.com/single');
+    expect(result).toContain('https://example.com/array1');
+    expect(result).toContain('https://example.com/array2');
+    expect(result).toContain('Fetched:');
+    expect(result).toContain('Content');
   });
 
   test('webfetch tool handles invalid URLs', async () => {

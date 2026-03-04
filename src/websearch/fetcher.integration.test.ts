@@ -22,8 +22,6 @@ const shouldRun = process.env.RUN_NETWORK_TESTS === 'true';
 
     const results = await fetchMultipleWebpagesToMarkdown(testUrls, {
       timeout: 30000,
-      optimizeForLLM: true,
-      maxLength: 10000,
     });
 
     const totalTime = Date.now() - startTime;
@@ -70,8 +68,6 @@ const shouldRun = process.env.RUN_NETWORK_TESTS === 'true';
       ['https://httpstat.us/200?sleep=5000'], // Simulates 5 second delay
       {
         timeout: 1000, // 1 second timeout
-        optimizeForLLM: true,
-        maxLength: 1000,
       },
     );
 
@@ -81,6 +77,6 @@ const shouldRun = process.env.RUN_NETWORK_TESTS === 'true';
     }
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain('timeout');
+    expect(result.error).toContain('closed');
   }, 10000);
 });

@@ -334,13 +334,21 @@ Search the web for technical information, documentation, and best practices usin
 Fetch webpages and convert them to LLM-optimized markdown. Useful for reading detailed documentation, articles, blog posts, or technical content during development research. Uses the [mdream](https://github.com/harlan-zw/mdream) library for efficient HTML-to-markdown conversion optimized for LLM token usage.
 
 **Arguments**:
-- `urls` (array of strings): URLs to fetch (1-10 URLs)
+- `url` (string, optional): Single URL to fetch (alternative to `urls`)
+- `urls` (array of strings, optional): URLs to fetch (1-10 URLs). If both `url` and `urls` are provided, both will be fetched (deduplicated).
 - `timeout` (number, optional): Timeout in milliseconds per request (default: 30000, max: 120000)
-- `optimize_for_llm` (boolean, optional): Use LLM-optimized markdown conversion (default: true)
-- `max_content_length` (number, optional): Maximum content length in characters (default: 10000, max: 50000)
-- `include_summary` (boolean, optional): Include a summary of fetch results (default: true)
 
 **Example**:
+
+Single URL:
+```json
+{
+  "url": "https://example.com/docs/getting-started",
+  "timeout": 15000
+}
+```
+
+Multiple URLs:
 ```json
 {
   "urls": [
@@ -348,27 +356,18 @@ Fetch webpages and convert them to LLM-optimized markdown. Useful for reading de
     "https://example.com/api-reference",
     "https://example.com/tutorial"
   ],
-  "timeout": 15000,
-  "optimize_for_llm": true,
-  "max_content_length": 8000,
-  "include_summary": true
+  "timeout": 15000
 }
 ```
 
 **Output includes**:
 - Success/failure status for each URL
-- Page title and content length
-- Fetch time and compression ratio
-- HTTP status code
-- Markdown content preview
-- Optional summary of all results
+- Page title and content
 
 **Features**:
 - **Parallel fetching**: All URLs fetched concurrently for maximum speed
 - **LLM optimization**: Uses mdream's minimal preset for token-efficient markdown
 - **Error handling**: Gracefully handles invalid URLs, timeouts, and HTTP errors
-- **Content truncation**: Automatically truncates content to specified limits
-- **Metadata tracking**: Provides detailed metrics about fetch performance
 
 ## Rule Structure
 

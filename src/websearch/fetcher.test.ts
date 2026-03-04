@@ -227,19 +227,4 @@ describe('webpage fetcher', () => {
 
     expect(result.success).toBe(true);
   });
-
-  test('respects maxLength option', async () => {
-    // Mock htmlToMarkdown to return long content
-    mock.module('mdream', () => ({
-      htmlToMarkdown: mock(() => 'x'.repeat(2000)),
-    }));
-
-    const result = await fetchWebpageToMarkdown('https://example.com', {
-      maxLength: 1000,
-    });
-
-    expect(result.success).toBe(true);
-    expect(result.content.length).toBeLessThanOrEqual(1000 + 30); // Account for truncation message
-    expect(result.content).toContain('[content truncated]');
-  });
 });

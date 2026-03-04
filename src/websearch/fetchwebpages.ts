@@ -1,32 +1,71 @@
 import { type ToolContext, tool } from '@opencode-ai/plugin';
 import type { PluginConfig } from '../config';
-import { fetchMultipleWebpagesToMarkdown, summarizeFetchResults } from './fetcher';
+import { fetchMultipleWebpagesToMarkdown } from './fetcher';
 
 export function createFetchWebpagesTool(_directory: string, _config?: PluginConfig) {
   return tool({
     description:
       'Fetch webpages and convert them to LLM-optimized markdown. Useful for reading detailed documentation, articles, blog posts, or technical content during development research.',
     args: {
-      urls: tool.schema.array(tool.schema.string()).min(1).max(10),
+      url: tool.schema.string().optional().describe('If you need to fetch single URL only.'),
+      urls: tool.schema.array(tool.schema.string()).min(1).max(10).optional().describe('List of URLs to be fetched.'),
       timeout: tool.schema.number().int().positive().max(120000).optional(),
-      optimize_for_llm: tool.schema.boolean().optional(),
-      max_content_length: tool.schema.number().int().positive().max(50000).optional(),
-      include_summary: tool.schema.boolean().optional(),
+      // TODO: summarize: tool.schema.boolean().optional().describe('Provide only summarized content instead of the full one.'),
     },
     async execute(args, _context: ToolContext): Promise<string> {
-      const {
-        urls,
-        timeout = 30000,
-        optimize_for_llm = true,
-        max_content_length = 10000,
-        include_summary = true,
-      } = args;
+      const { url, urls, timeout = 30000 } = args;
+
+      // Normalize URLs: collect from both url and urls parameters
+      const rawUrls: string[] = [];
+
+      // Handle single url parameter
+      if (typeof url === 'string' && url.trim()) {
+        rawUrls.push(url.trim());
+      }
+
+      // Handle urls parameter (could be array, JSON string, or single string)
+      if (urls !== undefined && urls !== null) {
+        if (typeof urls === 'string') {
+          const urlsString: string = urls;
+          // Try to parse as JSON array
+          try {
+            const parsed = JSON.parse(urlsString);
+            if (Array.isArray(parsed)) {
+              parsed.forEach((u: unknown) => {
+                if (typeof u === 'string' && u.trim()) {
+                  rawUrls.push(u.trim());
+                }
+              });
+            } else if (typeof parsed === 'string' && parsed.trim()) {
+              rawUrls.push(parsed.trim());
+            }
+          } catch {
+            // If not valid JSON, treat as a single URL string
+            if (urlsString.trim()) {
+              rawUrls.push(urlsString.trim());
+            }
+          }
+        } else if (Array.isArray(urls)) {
+          urls.forEach((u: unknown) => {
+            if (typeof u === 'string' && u.trim()) {
+              rawUrls.push(u.trim());
+            }
+          });
+        }
+      }
+
+      // Deduplicate URLs
+      const uniqueUrls = [...new Set(rawUrls)];
+
+      if (uniqueUrls.length === 0) {
+        return 'No URLs provided. Please provide at least one valid URL using the "url" or "urls" parameter.';
+      }
 
       // Validate URLs
       const validUrls: string[] = [];
       const invalidUrls: string[] = [];
 
-      urls.forEach((url) => {
+      uniqueUrls.forEach((url) => {
         try {
           new URL(url);
           validUrls.push(url);
@@ -40,39 +79,23 @@ export function createFetchWebpagesTool(_directory: string, _config?: PluginConf
       }
 
       // Fetch webpages
-      const results = await fetchMultipleWebpagesToMarkdown(validUrls, {
-        timeout,
-        optimizeForLLM: optimize_for_llm,
-        maxLength: max_content_length,
-      });
+      const results = await fetchMultipleWebpagesToMarkdown(validUrls, { timeout });
 
       // Format output
       let output = '';
 
-      if (include_summary) {
-        output += `${summarizeFetchResults(results)}\n\n`;
-      }
-
       // Add detailed results
-      output += '## Detailed Results\n\n';
+      output += '## Fetch Results\n\n';
       results.forEach((result, index) => {
         output += `### ${index + 1}. ${result.url}\n`;
-        output += `**Title**: ${result.title || 'No title'}\n`;
-        output += `**Status**: ${result.success ? '✅ Success' : `❌ Failed: ${result.error}`}\n`;
+        output += `- **Title**: ${result.title || 'No title'}\n`;
+        output += `- **Status**: ${result.success ? '✅ Success' : `❌ Failed: ${result.error}`}\n`;
 
         if (result.success) {
-          output += `**Content length**: ${result.length} characters\n`;
-          output += `**Fetch time**: ${result.metadata.fetchTime}ms\n`;
-          output += `**Compression**: ${(result.metadata.compressionRatio * 100).toFixed(1)}%\n\n`;
-
-          // Add content preview
-          const previewLength = Math.min(500, result.content.length);
-          output += '**Content preview**:\n```markdown\n';
-          output += result.content.substring(0, previewLength);
-          if (result.content.length > previewLength) {
-            output += '...\n';
-          }
-          output += '```\n\n';
+          // Add webpage content
+          output += '#### Content\n\n';
+          output += result.content;
+          output += '---\n\n';
         } else {
           output += '\n';
         }

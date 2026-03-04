@@ -9,21 +9,9 @@ export interface WebpageFetchOptions {
   timeout?: number;
 
   /**
-   * Whether to use the minimal preset for token optimization
-   * @default true
-   */
-  optimizeForLLM?: boolean;
-
-  /**
    * Base URL for resolving relative links and images
    */
   origin?: string;
-
-  /**
-   * Maximum content length in characters
-   * @default 100000
-   */
-  maxLength?: number;
 
   /**
    * User agent string to use for requests
@@ -99,9 +87,7 @@ export async function fetchWebpageToMarkdown(
   const startTime = Date.now();
   const {
     timeout = 30000,
-    optimizeForLLM = true,
     origin,
-    maxLength = 100000,
     userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     headers = {},
   } = options;
@@ -154,18 +140,11 @@ export async function fetchWebpageToMarkdown(
       const title = extractTitleFromHtml(html);
 
       // Convert HTML to markdown using mdream
-      const mdreamOptions = optimizeForLLM
-        ? withMinimalPreset({
-            origin: finalOrigin,
-          })
-        : { origin: finalOrigin };
+      const mdreamOptions = withMinimalPreset({
+        origin: finalOrigin,
+      });
 
-      let markdown = htmlToMarkdown(html, mdreamOptions);
-
-      // Truncate if too long
-      if (markdown.length > maxLength) {
-        markdown = `${markdown.substring(0, maxLength)}\n\n... [content truncated]`;
-      }
+      const markdown = htmlToMarkdown(html, mdreamOptions);
 
       const markdownSize = markdown.length;
       const fetchTime = Date.now() - startTime;
